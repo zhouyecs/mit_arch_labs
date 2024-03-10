@@ -1,0 +1,17 @@
+Write your answer to this question in the text file discussion.txt provided in the lab repository.
+
+1, What is the source of the performance gap between your two elastic implementations (when it is using the class fifo and when it is using your own fifo)?
+
+whether the fifo can implement enq and deq concurrently or not.
+
+2, Assume you are given a black box module that performs a 10-stage algorithm. You can not look at its internal implementation, but you can test this module 
+by giving it data and looking at the output of the module. You have been told that it is implemented as one of the structures covered in this lab, but you 
+do not know which one. How can you tell if it is inelastic or if it is elastic? 
+
+insert a bubble, and check the output.
+If it is inelastic, the output data will be correct, else it will be wrong.
+
+
+3, How long did you take to work on this lab?
+
+7h
