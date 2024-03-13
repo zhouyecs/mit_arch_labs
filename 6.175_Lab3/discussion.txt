@@ -1,0 +1,40 @@
+1, Hardware-wise, unsigned addition is the same as signed addition when using two's complement encoding. Using evidence from the test bench, is unsigned multiplication the same as signed multiplication?
+
+it's different
+
+2, What is that error? How does the original code fix the compilation error? Why is two function definitions not necessary? (i.e. why can the second operand to mkTbMulFunction have variables in its type?)
+
+error:
+checking package dependencies
+compiling TestBench.bsv
+Error: "TestBench.bsv", line 10, column 33: (T0004)
+  Unbound variable `test_function'
+make: *** [Makefile:5: compile] Error 1
+
+it wrong because we do not specify the value of 'n' in mkTbMulFunction in TestBenchTemplates.bsv,
+by using test_function, in which we assign n = 8, bluespec can speculate that another function's 'n' is also 8
+
+3, is your implementation of multiply_by_adding a signed multiplier or an unsigned multiplier?
+
+unsigned
+
+4, Fill in above table in discussion.txt. None of the Radix-4 Booth encodings should have more than one non-zero symbol in them.
+
+Current Bits	Previous Bit	Original Booth Encoding		Radix-4 Booth Encoding
+00	            0		        00	                        00
+00	            1		        0+	                        0+
+01	            0	            +-	                        0+
+01	            1		        +0	                        +0
+10	            0		        -0	                        -0
+10	            1		        -+	                        0-
+11	            0		        0-	                        0-
+11	            1		        00	                        00
+
+
+5, Can all radix-8 Booth encodings be represented with only one non-zero symbol like the radix-4 Booth multiplier? Do you think it would still make sense to make a radix-8 Booth multiplier?
+
+some will use 2 non-zero symbol
+it depends on area and power, it's a tradeoff
+
+6, How long did you take to work on this lab?
+6h
