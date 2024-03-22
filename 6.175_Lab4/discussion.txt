@@ -1,0 +1,62 @@
+1, What registers are read from and written to in each of the interface methods? Remember that register reads performed in guards count.
+
+notFull:
+    read:       notFullP
+    written:    -
+enq:
+    read:       notFullP  enqP  deqP
+    written:    notFullP  notEmptyP  data  enqP
+notEmpty:
+    read:       notEmptyP
+    written:    -
+deq:
+    read:       notEmptyP  enqP  deqP
+    written:    notFullP  notEmptyP  deqP
+first:
+    read:       notEmptyP  data  deqP
+    written:    -
+clear:
+    read:       -
+    written:    deqP  enqP  notEmptyP  notFullP
+
+2, Fill out the conflict matrix for mkMyConflictFifo. For simplicity, treat writes to the same register as conflicting (not just conflicting within a single rule).
+
+            notFull    enq    notEmpty     deq    first    clear
+         +----------+------+------------+------+--------+----------+
+notFull  |    CF    |  <   |     CF     |  <   |   CF   |    <     |
+         +----------+------+------------+------+--------+----------+
+enq      |    >     |  C   |     >      |  C   |   CF   |    C     |     
+         +----------+------+------------+------+--------+----------+
+notEmpty |    CF    |  <   |     CF     |  >   |   CF   |    <     |
+         +----------+------+------------+------+--------+----------+
+deq      |    >     |  C   |     >      |  C   |   >    |    C     |
+         +----------+------+------------+------+--------+----------+
+first    |    CF    |  CF  |     CF     |  <   |   CF   |    <     |
+         +----------+------+------------+------+--------+----------+
+clear    |    >     |  C   |     >      |  C   |   >    |    C     |
+         +----------+------+------------+------+--------+----------+
+
+3, Using your conflict matrix for mkMyConflictFifo, which conflicts do not match the conflict-free FIFO scheduling constraints shown above?
+
+            notFull    enq    notEmpty     deq    first    clear
+         +----------+------+------------+------+--------+----------+
+notFull  |    CF    |  <   |     CF     |  CF  |   CF   |    <     |
+         +----------+------+------------+------+--------+----------+
+enq      |    >     |  CF  |     CF     |  C   |   CF   |    <     |     
+         +----------+------+------------+------+--------+----------+
+notEmpty |    CF    |  CF  |     CF     |  >   |   CF   |    <     |
+         +----------+------+------------+------+--------+----------+
+deq      |    >     |  C   |     >      |  C   |   >    |    <     |
+         +----------+------+------------+------+--------+----------+
+first    |    CF    |  CF  |     CF     |  <   |   CF   |    <     |
+         +----------+------+------------+------+--------+----------+
+clear    |    CF    |  >   |     >      |  >   |   >    |    C     |
+         +----------+------+------------+------+--------+----------+
+
+4, In your design of the clear() method, how did you force the scheduling constraint {enq, deq} < clear?
+
+use port 1 for clear(), and use port 0 for enq and deq
+
+5, How long did you take to work on this lab?
+
+6h
