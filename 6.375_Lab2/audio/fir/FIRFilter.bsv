@@ -17,27 +17,27 @@ module mkFIRFilter (Vector#(tnp1, FixedPoint#(16, 16)) coeffs, AudioProcessor if
     Vector#(tnp1 , Multiplier) m <- replicateM(mkMultiplier());
 
     rule mult(True);
+        Sample sample = infifo.first();
         infifo.deq();
-        Sample sample=infifo.first();
-        r[0]<=sample;
-        for(Integer i=0;i<valueof(tnp1)-2;i=i+1) begin
-            r[i+1]<=r[i];
+        r[0] <= sample;
+        for(Integer i = 0; i < valueof(tnp1) - 2; i = i + 1) begin
+            r[i + 1] <= r[i];
         end
 
-        m[0].putOperands(coeffs[0],sample);
-        for(Integer i=1;i<valueof(tnp1);i=i+1) begin
-            m[i].putOperands(coeffs[i],r[i-1]);
+        m[0].putOperands(coeffs[0], sample);
+        for(Integer i = 1; i < valueof(tnp1); i = i + 1) begin
+            m[i].putOperands(coeffs[i], r[i - 1]);
         end
     endrule
 
     rule add(True);
-        Vector#(tnp1,FixedPoint#(16,16)) res;
-        res[0]<-m[0].getResult();
-        for(Integer i=1;i<valueof(tnp1);i=i+1) begin
-            let x<-m[i].getResult();
-            res[i]=res[i-1]+x;
+        Vector#(tnp1,FixedPoint#(16, 16)) res;
+        res[0] <- m[0].getResult();
+        for(Integer i = 1; i < valueof(tnp1); i = i + 1) begin
+            let x <- m[i].getResult();
+            res[i] = res[i -1 ] + x;
         end
-        outfifo.enq(fxptGetInt(res[valueof(tnp1)-1]));
+        outfifo.enq(fxptGetInt(res[valueof(tnp1) -1]));
     endrule
 
     method Action putSampleInput(Sample in);
