@@ -3,7 +3,7 @@ bsvdir = ../common:../fir
 build_dir = bscdir
 synth_dir = /tmp/6375-lab2-${USER}
 
-src = FFT.bsv
+src = FFT_polymorphic.bsv #FFT.bsv
 
 compile: $(src)
 	mkdir -p bscdir
