@@ -132,7 +132,6 @@ module mkCombinationalFFT (FFT);
 endmodule
 
 // Problem 2
-// Just add Reg
 module mkLinearFFT (FFT);
 
     // Statically generate the twiddle factors table.
