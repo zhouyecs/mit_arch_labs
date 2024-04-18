@@ -15,8 +15,8 @@ module mkFIRFilter (AudioProcessor);
     Vector#(9,Multiplier) m<-replicateM(mkMultiplier());
 
     rule mult(True);
-        infifo.deq();
         Sample sample=infifo.first();
+        infifo.deq();
         r[0]<=sample;
         for(Integer i=0;i<7;i=i+1) begin
             r[i+1]<=r[i];
