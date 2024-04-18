@@ -4,18 +4,23 @@ change for combinational, linear and circular designs? Please explain to your ob
 Which design(s) would give you the highest throughput if all FFT designs were running at the
 same clock frequency?
 
-
+no
+I guess
+area: linear > combinational > circular
+cpd: combinational > linear ≈ circular
 
 2. Answer the three questions given in Problem 5 where we implemented polymorphic FIR filters.
 
-
+modify the FilterCoefficients.bsv
 
 3. Before you made your FFT implementations polymorphic, the number of points and data
 type was specified with global typedefs. What are the advantages of making the interface and
 modules polymorphic instead of just using typedefs? Are there any disadvantages to making
 the interfaces and modules polymorphic?
 
+pros: use provisos to prevent the wrong data type from being used, and the code is more readable
 
+cons: the `provisos` needed to be added to every function call, and the code is more verbose
 
 4. Now that your FFT can be fully separated from the AudioPipeline, it makes sense to test the
 FFT modules independently. Describe in detail (two or three paragraphs is appropriate) how
@@ -23,3 +28,5 @@ you can test your FFT implementations independently from the rest of the AudioPi
 Are your FFT implementations correct for both larger and smaller number of points than 8?
 Is it any easier to test the FFT implementations because they are polymorphic?
 
+maybe we can download the test data from the internet, and write the testbench.
+yes, yes.
