@@ -145,6 +145,26 @@ module mkLinearFFT (FFT);
     FIFO#(Vector#(FFT_POINTS, ComplexSample)) inputFIFO  <- mkFIFO(); 
     FIFO#(Vector#(FFT_POINTS, ComplexSample)) outputFIFO <- mkFIFO(); 
 
+    // fifo
+    // FIFO#(Vector#(FFT_POINTS, ComplexSample)) fifo1  <- mkFIFO(); 
+    // FIFO#(Vector#(FFT_POINTS, ComplexSample)) fifo2  <- mkFIFO(); 
+
+    // rule stage1;
+    //     fifo1.enq(stage_f(0, inputFIFO.first));
+    //     inputFIFO.deq();
+    // endrule
+
+    // rule stage2;
+    //     fifo2.enq(stage_f(1, fifo1.first));
+    //     fifo1.deq();
+    // endrule
+
+    // rule stage3;
+    //     outputFIFO.enq(stage_f(2, fifo2.first));
+    //     fifo2.deq();
+    // endrule
+
+    // vector
     Vector#(TAdd#(1, FFT_LOG_POINTS), Reg#(Vector#(FFT_POINTS, ComplexSample))) stage_data <- replicateM(mkRegU);
     Vector#(TAdd#(1, FFT_LOG_POINTS), Reg#(Bool)) stage_valid <- replicateM(mkReg(False));
 
@@ -162,12 +182,12 @@ module mkLinearFFT (FFT);
             else begin
                 stage_valid[stage+1] <= False;
             end
-            
         end
         
         if(stage_valid[valueOf(FFT_LOG_POINTS)]) begin
             outputFIFO.enq(stage_data[valueOf(FFT_LOG_POINTS)]);
         end
+
     endrule
 
     interface Put request;
@@ -227,8 +247,8 @@ endmodule
 // Wrapper around The FFT module we actually want to use
 module mkFFT (FFT);
     // FFT fft <- mkCombinationalFFT();
-    // FFT fft <- mkLinearFFT();
-    FFT fft <- mkCircularFFT();
+    FFT fft <- mkLinearFFT();
+    // FFT fft <- mkCircularFFT();
     
     interface Put request = fft.request;
     interface Get response = fft.response;
