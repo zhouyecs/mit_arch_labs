@@ -7,7 +7,8 @@ import GetPut::*;
 import Real::*;
 import Vector::*;
 
-import AudioProcessorTypes::*;
+// problem 7
+// import AudioProcessorTypes::*;
 
 typedef Server#(
     Vector#(fft_points, Complex#(cmplxd)),
@@ -25,7 +26,7 @@ endfunction
 // Generate a table of all the needed twiddle factors.
 // The table can be used for looking up a twiddle factor dynamically.
 typedef Vector#(TLog#(fft_points), Vector#(TDiv#(fft_points, 2), Complex#(cmplxd))) TwiddleTable#(numeric type fft_points, type cmplxd);
-function TwiddleTable#(fft_points, cmplxd) genTwiddles() provisos (RealLiteral#(cmplxd));
+function TwiddleTable#(fft_points, cmplxd) genTwiddles() provisos (Add#(2, a__, fft_points), RealLiteral#(cmplxd));
     TwiddleTable#(fft_points,cmplxd) twids = newVector;
     for (Integer s = 0; s < valueOf(TLog#(fft_points)); s = s+1) begin
         for (Integer i = 0; i < valueOf(TDiv#(fft_points, 2)); i = i+1) begin
@@ -51,7 +52,7 @@ endfunction
 // corresponding to the bit-reversal of their indices.
 // The reordering can be done either as as the
 // first or last phase of the FFT transformation.
-function Vector#(fft_points, Complex#(cmplxd)) bitReverse(Vector#(fft_points,Complex#(cmplxd)) inVector);
+function Vector#(fft_points, Complex#(cmplxd)) bitReverse(Vector#(fft_points,Complex#(cmplxd)) inVector) provisos(Add#(2, a__, fft_points));
     Vector#(fft_points, Complex#(cmplxd)) outVector = newVector();
     for(Integer i = 0; i < valueOf(fft_points); i = i+1) begin   
         Bit#(TLog#(fft_points)) reversal = reverseBits(fromInteger(i));
@@ -109,7 +110,6 @@ module mkCombinationalFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_
   
     // This rule performs fft using a big mass of combinational logic.
     rule comb_fft;
-  
       Vector#(TAdd#(1, TLog#(fft_points)), Vector#(fft_points, Complex#(cmplxd))) stage_data = newVector();
       stage_data[0] = inputFIFO.first();
       inputFIFO.deq();
@@ -145,29 +145,22 @@ module mkLinearFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_points)
     FIFO#(Vector#(fft_points, Complex#(cmplxd))) inputFIFO  <- mkFIFO(); 
     FIFO#(Vector#(fft_points, Complex#(cmplxd))) outputFIFO <- mkFIFO(); 
 
-    Vector#(TAdd#(1, TLog#(fft_points)), Reg#(Vector#(fft_points, Complex#(cmplxd)))) stage_data <- replicateM(mkRegU);
-    Vector#(TAdd#(1, TLog#(fft_points)), Reg#(Bool)) stage_valid <- replicateM(mkReg(False));
+    FIFO#(Vector#(fft_points, Complex#(cmplxd))) fifo1  <- mkFIFO(); 
+    FIFO#(Vector#(fft_points, Complex#(cmplxd))) fifo2 <- mkFIFO(); 
 
-    rule linear_fft;
-    
-        stage_data[0] <= inputFIFO.first();
-        stage_valid[0] <= True;
+    rule stage1;
+        fifo1.enq(stage_f(0, inputFIFO.first));
         inputFIFO.deq();
+    endrule
 
-        for(Integer stage = 0; stage < valueOf(TLog#(fft_points)); stage=stage+1) begin
-            if(stage_valid[stage]) begin
-                stage_data[stage+1] <= stage_f(fromInteger(stage), stage_data[stage]);  
-                stage_valid[stage+1] <= True;
-            end
-            else begin
-                stage_valid[stage+1] <= False;
-            end
-            
-        end
-        
-        if(stage_valid[valueOf(TLog#(fft_points))]) begin
-            outputFIFO.enq(stage_data[valueOf(TLog#(fft_points))]);
-        end
+    rule stage2;
+        fifo2.enq(stage_f(1, fifo1.first));
+        fifo1.deq();
+    endrule
+
+    rule stage3;
+        outputFIFO.enq(stage_f(2, fifo2.first));
+        fifo2.deq();
     endrule
 
     interface Put request;
@@ -201,17 +194,14 @@ module mkCircularFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_point
         if(stage == 0) begin
             stage_data <= stage_f(stage, inputFIFO.first());  
             inputFIFO.deq();
-            stage <= stage + 1;
         end
         else if(stage == fromInteger(valueOf(TLog#(fft_points)))) begin
             outputFIFO.enq(stage_data);
-            stage <= 0;
         end
         else begin
-            stage_data <= stage_f(stage, stage_data);  
-            stage <= stage + 1;            
+            stage_data <= stage_f(stage, stage_data);           
         end
-
+        stage <= (stage == fromInteger(valueOf(FFT_LOG_POINTS))) ? 0 : stage + 1;
     endrule
 
     interface Put request;
@@ -227,8 +217,8 @@ endmodule
 // Wrapper around The FFT module we actually want to use
 module mkFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_points), Arith#(cmplxd), RealLiteral#(cmplxd), Bits#(cmplxd, b__));
     // FFT#(fft_points, cmplxd) fft <- mkCombinationalFFT();
-    // FFT#(fft_points, cmplxd) fft <- mkLinearFFT();
-    FFT#(fft_points, cmplxd) fft <- mkCircularFFT();
+    FFT#(fft_points, cmplxd) fft <- mkLinearFFT();
+    // FFT#(fft_points, cmplxd) fft <- mkCircularFFT();
     
     interface Put request = fft.request;
     interface Get response = fft.response;

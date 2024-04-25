@@ -17,7 +17,21 @@ http://csg.csail.mit.edu/6.375/6_375_2019_www/handouts.html
 和 https://developers.redhat.com/blog/2015/02/05/gcc5-and-the-c11-abi  
 简而言之，就是新旧版的兼容问题。（怎么没有小贴士呢？
 #### problem 2
-写一个module mkLinearFFT (FFT)。  
+写一个module mkLinearFFT。  
 参考figure2，mkCombinationalFFT  
-1、使用fifo实现，使用三个stage  
-2、使用vector实现，进行循环  
+参考pdf L05-FoldedandPipeliendCircuits  
+使用fifo实现，使用三个stage  
+#### problem 3
+写一个module mkCircularFFT。  
+参考figure2，mkCombinationalFFT 
+参考pdf L05-FoldedandPipeliendCircuits，pdf里称为folded  
+使用if-else语句判断即可
+#### problem 4
+按照题目改就行
+#### problem 5
+按照题目指示的对应关系更改源代码即可，例如8->TSub#(tnp1, 1), 9->tnp1
+#### problem 6
+按照题目指示，再把FFT_POINTS->fft_points，ComplexSample->Complex#(cmplxd)替换即可
+#### problem 7
+只要在对应参数位置加上provisos (Add#(2, a__, fft_points))，无需添加其他要求就足以pass。  
+其他要求还在研究......

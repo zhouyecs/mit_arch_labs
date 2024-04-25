@@ -12,6 +12,9 @@ import FixedPoint::*;
 
 module mkAudioPipeline(AudioProcessor);
 
+    // problem 1-3
+    // AudioProcessor fir <- mkFIRFilter();
+    // problem 4-7
     AudioProcessor fir <- mkFIRFilter(c);
     Chunker#(FFT_POINTS, ComplexSample) chunker <- mkChunker();
     // no polymorphic

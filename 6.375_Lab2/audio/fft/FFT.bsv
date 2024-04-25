@@ -109,7 +109,6 @@ module mkCombinationalFFT (FFT);
 
   // This rule performs fft using a big mass of combinational logic.
   rule comb_fft;
-
     Vector#(TAdd#(1, FFT_LOG_POINTS), Vector#(FFT_POINTS, ComplexSample)) stage_data = newVector();
     stage_data[0] = inputFIFO.first();
     inputFIFO.deq();
@@ -145,49 +144,23 @@ module mkLinearFFT (FFT);
     FIFO#(Vector#(FFT_POINTS, ComplexSample)) inputFIFO  <- mkFIFO(); 
     FIFO#(Vector#(FFT_POINTS, ComplexSample)) outputFIFO <- mkFIFO(); 
 
-    // fifo
-    // FIFO#(Vector#(FFT_POINTS, ComplexSample)) fifo1  <- mkFIFO(); 
-    // FIFO#(Vector#(FFT_POINTS, ComplexSample)) fifo2  <- mkFIFO(); 
+    //fifo
+    FIFO#(Vector#(FFT_POINTS, ComplexSample)) fifo1  <- mkFIFO(); 
+    FIFO#(Vector#(FFT_POINTS, ComplexSample)) fifo2  <- mkFIFO(); 
 
-    // rule stage1;
-    //     fifo1.enq(stage_f(0, inputFIFO.first));
-    //     inputFIFO.deq();
-    // endrule
-
-    // rule stage2;
-    //     fifo2.enq(stage_f(1, fifo1.first));
-    //     fifo1.deq();
-    // endrule
-
-    // rule stage3;
-    //     outputFIFO.enq(stage_f(2, fifo2.first));
-    //     fifo2.deq();
-    // endrule
-
-    // vector
-    Vector#(TAdd#(1, FFT_LOG_POINTS), Reg#(Vector#(FFT_POINTS, ComplexSample))) stage_data <- replicateM(mkRegU);
-    Vector#(TAdd#(1, FFT_LOG_POINTS), Reg#(Bool)) stage_valid <- replicateM(mkReg(False));
-
-    rule linear_fft;
-    
-        stage_data[0] <= inputFIFO.first();
-        stage_valid[0] <= True;
+    rule stage1;
+        fifo1.enq(stage_f(0, inputFIFO.first));
         inputFIFO.deq();
+    endrule
 
-        for(Integer stage = 0; stage < valueOf(FFT_LOG_POINTS); stage=stage+1) begin
-            if(stage_valid[stage]) begin
-                stage_data[stage+1] <= stage_f(fromInteger(stage), stage_data[stage]);  
-                stage_valid[stage+1] <= True;
-            end
-            else begin
-                stage_valid[stage+1] <= False;
-            end
-        end
-        
-        if(stage_valid[valueOf(FFT_LOG_POINTS)]) begin
-            outputFIFO.enq(stage_data[valueOf(FFT_LOG_POINTS)]);
-        end
+    rule stage2;
+        fifo2.enq(stage_f(1, fifo1.first));
+        fifo1.deq();
+    endrule
 
+    rule stage3;
+        outputFIFO.enq(stage_f(2, fifo2.first));
+        fifo2.deq();
     endrule
 
     interface Put request;
@@ -221,17 +194,14 @@ module mkCircularFFT (FFT);
         if(stage == 0) begin
             stage_data <= stage_f(stage, inputFIFO.first());  
             inputFIFO.deq();
-            stage <= stage + 1;
         end
         else if(stage == fromInteger(valueOf(FFT_LOG_POINTS))) begin
             outputFIFO.enq(stage_data);
-            stage <= 0;
         end
         else begin
-            stage_data <= stage_f(stage, stage_data);  
-            stage <= stage + 1;            
+            stage_data <= stage_f(stage, stage_data);            
         end
-
+        stage <= (stage == fromInteger(valueOf(FFT_LOG_POINTS))) ? 0 : stage + 1;
     endrule
 
     interface Put request;
@@ -247,8 +217,8 @@ endmodule
 // Wrapper around The FFT module we actually want to use
 module mkFFT (FFT);
     // FFT fft <- mkCombinationalFFT();
-    FFT fft <- mkLinearFFT();
-    // FFT fft <- mkCircularFFT();
+    // FFT fft <- mkLinearFFT();
+    FFT fft <- mkCircularFFT();
     
     interface Put request = fft.request;
     interface Get response = fft.response;
