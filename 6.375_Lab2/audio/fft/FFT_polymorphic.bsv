@@ -17,7 +17,7 @@ typedef Server#(
 
 // Get the appropriate twiddle factor for the given stage and index.
 // This computes the twiddle factor statically.
-function Complex#(cmplxd) getTwiddle(Integer stage, Integer index, Integer points) provisos (RealLiteral#(cmplxd));
+function Complex#(cmplxd) getTwiddle(Integer stage, Integer index, Integer points);
     Integer i = ((2*index)/(2 ** (log2(points)-stage))) * (2 ** (log2(points)-stage));
     return cmplx(fromReal(cos(fromInteger(i)*pi/fromInteger(points))),
                  fromReal(-1*sin(fromInteger(i)*pi/fromInteger(points))));
@@ -26,7 +26,7 @@ endfunction
 // Generate a table of all the needed twiddle factors.
 // The table can be used for looking up a twiddle factor dynamically.
 typedef Vector#(TLog#(fft_points), Vector#(TDiv#(fft_points, 2), Complex#(cmplxd))) TwiddleTable#(numeric type fft_points, type cmplxd);
-function TwiddleTable#(fft_points, cmplxd) genTwiddles() provisos (Add#(2, a__, fft_points), RealLiteral#(cmplxd));
+function TwiddleTable#(fft_points, cmplxd) genTwiddles();
     TwiddleTable#(fft_points,cmplxd) twids = newVector;
     for (Integer s = 0; s < valueOf(TLog#(fft_points)); s = s+1) begin
         for (Integer i = 0; i < valueOf(TDiv#(fft_points, 2)); i = i+1) begin
@@ -52,7 +52,7 @@ endfunction
 // corresponding to the bit-reversal of their indices.
 // The reordering can be done either as as the
 // first or last phase of the FFT transformation.
-function Vector#(fft_points, Complex#(cmplxd)) bitReverse(Vector#(fft_points,Complex#(cmplxd)) inVector) provisos(Add#(2, a__, fft_points));
+function Vector#(fft_points, Complex#(cmplxd)) bitReverse(Vector#(fft_points,Complex#(cmplxd)) inVector);
     Vector#(fft_points, Complex#(cmplxd)) outVector = newVector();
     for(Integer i = 0; i < valueOf(fft_points); i = i+1) begin   
         Bit#(TLog#(fft_points)) reversal = reverseBits(fromInteger(i));
@@ -76,7 +76,7 @@ endfunction
 // permutation.
 // We pass the table of twiddles as an argument so we can look those up
 // dynamically if need be.
-function Vector#(fft_points, Complex#(cmplxd)) stage_ft(TwiddleTable#(fft_points, cmplxd) twiddles, Bit#(TLog#(TLog#(fft_points))) stage, Vector#(fft_points, Complex#(cmplxd)) stage_in) provisos (Add#(2, a__, fft_points), Arith#(cmplxd));
+function Vector#(fft_points, Complex#(cmplxd)) stage_ft(TwiddleTable#(fft_points, cmplxd) twiddles, Bit#(TLog#(TLog#(fft_points))) stage, Vector#(fft_points, Complex#(cmplxd)) stage_in);
     Vector#(fft_points, Complex#(cmplxd)) stage_temp = newVector();
     for(Integer i = 0; i < (valueOf(fft_points)/2); i = i+1) begin    
         Integer idx = i * 2;
@@ -95,7 +95,7 @@ function Vector#(fft_points, Complex#(cmplxd)) stage_ft(TwiddleTable#(fft_points
 endfunction
 
 // Problem 1
-module mkCombinationalFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_points), Arith#(cmplxd), RealLiteral#(cmplxd), Bits#(cmplxd, b__));
+module mkCombinationalFFT (FFT#(fft_points, cmplxd));
 
     // Statically generate the twiddle factors table.
     TwiddleTable#(fft_points, cmplxd) twiddles = genTwiddles();
@@ -132,7 +132,7 @@ module mkCombinationalFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_
   endmodule
 
 // Problem 2
-module mkLinearFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_points), Arith#(cmplxd), RealLiteral#(cmplxd), Bits#(cmplxd, b__));
+module mkLinearFFT (FFT#(fft_points, cmplxd));
 
     // Statically generate the twiddle factors table.
     TwiddleTable#(fft_points, cmplxd) twiddles = genTwiddles();
@@ -174,7 +174,7 @@ module mkLinearFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_points)
 endmodule
 
 // Problem 3
-module mkCircularFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_points), Arith#(cmplxd), RealLiteral#(cmplxd), Bits#(cmplxd, b__));
+module mkCircularFFT (FFT#(fft_points, cmplxd));
 
     // Statically generate the twiddle factors table.
     TwiddleTable#(fft_points, cmplxd) twiddles = genTwiddles();
@@ -215,9 +215,9 @@ module mkCircularFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_point
 endmodule
 
 // Wrapper around The FFT module we actually want to use
-module mkFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_points), Arith#(cmplxd), RealLiteral#(cmplxd), Bits#(cmplxd, b__));
-    // FFT#(fft_points, cmplxd) fft <- mkCombinationalFFT();
-    FFT#(fft_points, cmplxd) fft <- mkLinearFFT();
+module mkFFT (FFT#(fft_points, cmplxd));
+    FFT#(fft_points, cmplxd) fft <- mkCombinationalFFT();
+    // FFT#(fft_points, cmplxd) fft <- mkLinearFFT();
     // FFT#(fft_points, cmplxd) fft <- mkCircularFFT();
     
     interface Put request = fft.request;
@@ -227,7 +227,7 @@ endmodule
 
 // Inverse FFT, based on the mkFFT module.
 // ifft[k] = fft[N-k]/N
-module mkIFFT (FFT#(fft_points, cmplxd)) provisos (Add#(2, a__, fft_points), Arith#(cmplxd), RealLiteral#(cmplxd), Bits#(cmplxd, b__), Bitwise#(cmplxd));
+module mkIFFT (FFT#(fft_points, cmplxd));
 
     FFT#(fft_points, cmplxd) fft <- mkFFT();
     FIFO#(Vector#(fft_points, Complex#(cmplxd))) outfifo <- mkFIFO();
