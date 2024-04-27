@@ -20,14 +20,13 @@
 // FIR Filter coefficients
 #define NUM_TAPS 8
 double coeffs[9] = {
-    -0.0124, 0.0, -0.0133, 0.0, 0.8181, 0.0, -0.0133, 0.0, -0.0124
-};
+    -0.0124, 0.0, -0.0133, 0.0, 0.8181, 0.0, -0.0133, 0.0, -0.0124};
 
 // Get the integer part from a double.
 // This is meant to correspond to fxptGetInt in bluespec.
-short getInt(double x)
+short getInt(double x) // rounded down to the nearest lesser integer.
 {
-    return x < 0 ? (short)(x-1) : (short)x;
+    return x < 0 ? (short)(x - 1) : (short)x;
 }
 
 // Given the next input to the fir filter, return the next output from the fir
@@ -39,12 +38,14 @@ short fir(short sample)
 
     double accumulate = coeffs[0] * (double)sample;
     int i;
-    for (i = 0; i < NUM_TAPS; i++) {
-        accumulate += coeffs[i+1] * (double)taps[i];
+    for (i = 0; i < NUM_TAPS; i++)
+    {
+        accumulate += coeffs[i + 1] * (double)taps[i];
     }
 
-    for (i = NUM_TAPS-1; i > 0; i--) {
-        taps[i] = taps[i-1];
+    for (i = NUM_TAPS - 1; i > 0; i--)
+    {
+        taps[i] = taps[i - 1];
     }
     taps[0] = sample;
 
@@ -54,11 +55,11 @@ short fir(short sample)
 // Construct a complex number from magnitude and phase.
 complex double cmplxmp(double mag, double phs)
 {
-    return mag * cexp(I*phs);
+    return mag * cexp(I * phs);
 }
 
 // Perform pitch adjustment on the given block of complex numbers..
-void pitchadjust(complex double* in, complex double* out)
+void pitchadjust(complex double *in, complex double *out)
 {
     // keep track of last rounds phases for each bin.
     // These persist accross calls to this function.
@@ -68,7 +69,8 @@ void pitchadjust(complex double* in, complex double* out)
     bzero(out, sizeof(complex double) * N);
 
     int i;
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < N; i++)
+    {
         double phase = carg(in[i]);
         double mag = cabs(in[i]);
 
@@ -80,8 +82,9 @@ void pitchadjust(complex double* in, complex double* out)
         // same output bin, in which case we just use the last of those input
         // bins.
         int bin = i * PITCH_FACTOR;
-        int nbin = (i+1) * PITCH_FACTOR;
-        if (nbin != bin && bin >= 0 && bin < N) {
+        int nbin = (i + 1) * PITCH_FACTOR;
+        if (nbin != bin && bin >= 0 && bin < N)
+        {
             double shifted = dphase * PITCH_FACTOR;
             outphases[bin] += shifted;
             out[bin] = cmplxmp(mag, outphases[bin]);
@@ -89,22 +92,23 @@ void pitchadjust(complex double* in, complex double* out)
     }
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-    if (argc != 3) {
+    if (argc != 3)
+    {
         fprintf(stderr, "usage: inputpcm outputpcm\n");
         return 1;
     }
 
-    const char* iname = argv[1];
-    const char* oname = argv[2];
+    const char *iname = argv[1];
+    const char *oname = argv[2];
 
-    FILE* fin = fopen(iname, "rb");
-    FILE* fout = fopen(oname, "wb");
+    FILE *fin = fopen(iname, "rb");
+    FILE *fout = fopen(oname, "wb");
 
     // Set up the FFT.
-    fftw_complex* infft = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-    fftw_complex* outfft = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    fftw_complex *infft = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * N);
+    fftw_complex *outfft = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * N);
     fftw_plan forward = fftw_plan_dft_1d(N, infft, outfft, FFTW_FORWARD, FFTW_ESTIMATE);
     fftw_plan reverse = fftw_plan_dft_1d(N, infft, outfft, FFTW_BACKWARD, FFTW_ESTIMATE);
 
@@ -116,24 +120,27 @@ int main(int argc, char* argv[])
     short outblock[N] = {0};
 
     int i;
-    while (!feof(fin)) {
+    while (!feof(fin))
+    {
 
         // Read in the next S samples
         short samples[S];
         fread(samples, sizeof(short), S, fin);
 
         // Pass the samples through the fir filter.
-        for (i = 0; i < S; i++) {
+        for (i = 0; i < S; i++)
+        {
             samples[i] = fir(samples[i]);
         }
 
         // Shift input samples left by S and copy in the next S sample values.
         // (Oversampling)
-        memmove(window, window + S, sizeof(short) * (N-S));
-        memcpy(window + (N-S), samples, sizeof(short)*S); 
+        memmove(window, window + S, sizeof(short) * (N - S));
+        memcpy(window + (N - S), samples, sizeof(short) * S);
 
         // Convert audio samples to complex numbers
-        for (i = 0; i < N; i++) {
+        for (i = 0; i < N; i++)
+        {
             infft[i] = (double complex)window[i];
         }
 
@@ -146,18 +153,21 @@ int main(int argc, char* argv[])
         // Inverse FFT
         // We have to scale down by N because fftw doesn't for us.
         fftw_execute(reverse);
-        for (i = 0; i < N; i++) {
+        for (i = 0; i < N; i++)
+        {
             outfft[i] /= (double)N;
         }
 
         // Average in new samples with output block and shift out ready
         // samples. (Overlayer)
-        for (i = 0; i < N; i++) {
-            outblock[i] += (short)(creal(outfft[i])*S/(double)(N));
+        for (i = 0; i < N; i++)
+        {
+            outblock[i] += (short)(creal(outfft[i]) * S / (double)(N));
         }
         fwrite(outblock, sizeof(short), S, fout);
-        memmove(outblock, outblock+S, sizeof(short) * (N-S));
-        for (i = N-S; i < N; i++) {
+        memmove(outblock, outblock + S, sizeof(short) * (N - S));
+        for (i = N - S; i < N; i++)
+        {
             outblock[i] = 0;
         }
     }
@@ -170,4 +180,3 @@ int main(int argc, char* argv[])
     fclose(fin);
     fclose(fout);
 }
-
