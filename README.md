@@ -36,9 +36,11 @@ http://csg.csail.mit.edu/6.375/6_375_2019_www/handouts.html
 
 ### lab3
 #### problem 1
-如果需要测试pitch.c（虽然没什么用），需要首先 `sudo apt install libfftw3-dev`。
-##### pitchadjust分析
-
+如果需要测试pitch.c（虽然没什么用），需要首先 `sudo apt install libfftw3-dev`。  
+创建了两个static变量inphases和outphases，在bsv中应该在rule外使用vector保存。  
+因为需要输出到out(fifo)中，所以在bsv中，先创建一个Vector out_data并初始化，再循环结束后再enq进out(fifo)中。  
+在if中，outphases[bin]先增加shifted，然后在输入到out中，在bsv中，需要注意均需要增加shifted。  
+bsv的各种类型很容易搞晕：(  
 #### problem 2
 
 #### problem 3
