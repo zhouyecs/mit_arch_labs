@@ -1,7 +1,7 @@
 1. Describe your design of the mkPitchAdjust module. How many cycles does it take to do a
 single round of pitch adjustment in your design?
 
-
+nbins
 
 2. Describe your design of the ToMP and FromMP modules. How many cycles does it take to convert
 a Vector of N Complex numbers to a Vector of N ComplexMP numbers assuming it takes K
