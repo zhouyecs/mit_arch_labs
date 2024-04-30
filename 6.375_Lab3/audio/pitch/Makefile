@@ -24,4 +24,4 @@ synthAudioPipeline: $(src)
 	synth ../common/AudioPipeline.bsv mkAudioPipeline -p $(bsvdir) -s $(synth_dir) -l multisize
 
 clean:
-	rm -rf bscdir PitchAdjust AudioPipeline *.so
+	rm -rf bscdir PitchAdjust AudioPipeline *.so out.pcm
