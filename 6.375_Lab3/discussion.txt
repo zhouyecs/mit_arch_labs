@@ -7,16 +7,16 @@ nbins
 a Vector of N Complex numbers to a Vector of N ComplexMP numbers assuming it takes K
 cycles to convert a single number?
 
-
+K, I guess the convert operation on vector can be unrolled.
 
 3. What portion of your time in this lab was spent initially implementing the mkPitchAdjust
 module and completing the pipeline, and what portion of your time was spent designing and
 implementing tests and debugging the pipeline?
 
-
+2:3, 1:3
 
 4. Report the synthesis result (i.e., area and critical path) of your mkAudioPipeline module.
 The report also shows you where the critical path starts and ends. Can you figure out which
 module accounts for the critical path?
 
-
+no synthesis

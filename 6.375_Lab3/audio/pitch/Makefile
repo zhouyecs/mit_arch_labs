@@ -10,10 +10,14 @@ PitchAdjust: PitchAdjust.bsv PitchAdjustTest.bsv
 	mkdir -p bscdir
 	bsc -u -sim -simdir $(build_dir) -bdir $(build_dir) -info-dir $(build_dir) $(bscflags) -p +:$(bsvdir) -g mkPitchAdjustTest PitchAdjustTest.bsv
 	bsc -e mkPitchAdjustTest -sim -o $@ -simdir $(build_dir) -bdir $(build_dir) -info-dir $(build_dir) $(bscflags)	
+
+# Problem 5
 AudioPipeline: $(src)
 	mkdir -p bscdir
 	bsc -u -sim -simdir $(build_dir) -bdir $(build_dir) -info-dir $(build_dir) $(bscflags) -p +:$(bsvdir) -g mkTestDriver ../common/TestDriver.bsv
 	bsc -e mkTestDriver -sim -o $@ -simdir $(build_dir) -bdir $(build_dir) -info-dir $(build_dir) $(bscflags)
+	./AudioPipeline
+	cmp -l out.pcm ../data/mitrib_pa8_2_2.pcm
 
 synthAudioPipeline: $(src)
 	mkdir -p $(synth_dir)
