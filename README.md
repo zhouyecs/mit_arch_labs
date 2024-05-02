@@ -44,7 +44,9 @@ bsv的各种类型很容易搞晕：(
 #### problem 2
 在pitch.c的`fftw_execute(forward);`前后输出，然后将其复制到PitchAdjustTest.bsv即可   
 #### problem 3
-
-#### problem 4
-
-#### problem 5
+参考figure3，From和To都是Complex和ComplexMP之间的转换，  
+From和To之间的代码也可以复用
+#### problem 4&5
+按照figure3，参考lab2文件，import需要的模块  
+注意提前创建factor： `FixedPoint#(I_SIZE, P_SIZE) factor = 2.0;`  
+和lab2不同，这里的x是vector，所以需要遍历进行tocmplx()frcmplx()
