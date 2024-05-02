@@ -50,3 +50,8 @@ From和To之间的代码也可以复用
 按照figure3，参考lab2文件，import需要的模块  
 注意提前创建factor： `FixedPoint#(I_SIZE, P_SIZE) factor = 2.0;`  
 和lab2不同，这里的x是vector，所以需要遍历进行tocmplx()frcmplx()
+
+### lab4
+第一次用docker
+#### Problem 1
+注意在exec时，需要-u 0，即以root身份进入容器，否则会报错  
