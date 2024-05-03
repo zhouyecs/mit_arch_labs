@@ -3,20 +3,20 @@ design (mkPcieTop) after making the pitch factor dynamic. Report the Total LUTs,
 DSP48 used and their percentage by each of the AudioPipeline, FIR, FFT, ToMP, PitchAdjust,
 FromMP, and IFFT modules.
 
-
+...
 
 2. Report the length of the critical path of your audio pipeline. Can you tell where in the design
 your critical path is?
 
-
+...
 
 3. Did you run into any problems using the FPGA?
 
-
+...
 
 4. What advantages are there to using subinterfaces in an interface instead of just using methods?
 
-
+flexibility
 
 5. If you try to synthesize the audio pipeline with a 32 point FFT, you’ll see it doesn’t fit on the
 FPGA. Ideally we could use a 1024 point FFT and still maintain the target rate of processing
@@ -30,3 +30,5 @@ higher throughput than we need and an excessively large input width, how could w
 our implementation of the FFT to both fit on the FPGA using 1024 points and still meet our
 required sample rate? Would the rest of the audio pipeline have to change to support this as
 well?
+
+...

@@ -53,5 +53,16 @@ From和To之间的代码也可以复用
 
 ### lab4
 第一次用docker
-#### Problem 1
+#### problem 1
 注意在exec时，需要-u 0，即以root身份进入容器，否则会报错  
+#### problem 2&3
+按照教程修改代码即可，因为没有vivado，跳过problem 3
+#### problem 4
+按照教程修改代码即可，这时还无法make run_simualtion，需要等整个lab结束后才行，我卡了很久，被自己蠢到了
+#### problem 5
+除了setFactor，整个pipeline还暴露了两个interface：putSampleInput和getSampleOutput，注意修改  
+可以参考前面的pitchAdjust，创建一个settable的interface，包含三个interface
+#### problem 6
+按照教程修改代码即可，其中`pd`应该改为`pf`
+#### problem 7
+按照教程修改代码即可
