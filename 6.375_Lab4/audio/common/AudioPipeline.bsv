@@ -21,24 +21,61 @@ typedef 16 I_SIZE;
 typedef 16 F_SIZE;
 typedef 16 P_SIZE;
 
+// Problem 2
+(* synthesize *)
+module mkAudioPipelineFFT(FFT#(N, FixedPoint#(I_SIZE, P_SIZE)));
+    FFT#(N, FixedPoint#(I_SIZE, P_SIZE)) fft <- mkFFT();
+    return fft;
+endmodule
+
+(* synthesize *)
+module mkAudioPipelineIFFT(FFT#(N, FixedPoint#(I_SIZE, P_SIZE)));
+    FFT#(N, FixedPoint#(I_SIZE, P_SIZE)) fft <- mkIFFT();
+    return fft;
+endmodule
+
+(* synthesize *)
+module mkAudioPipelineToMP(ToMP#(N, I_SIZE, F_SIZE, P_SIZE));
+    ToMP#(N, I_SIZE, F_SIZE, P_SIZE) toMp <- mkToMP();
+    return toMp;
+endmodule
+
+(* synthesize *)
+module mkAudioPipelineFromMP(FromMP#(N, I_SIZE, F_SIZE, P_SIZE));
+    FromMP#(N, I_SIZE, F_SIZE, P_SIZE) fromMp <- mkFromMP();
+    return fromMp;
+endmodule
+
+(* synthesize *)
+module mkAudioPipelinePitchAdjust(PitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE));
+    FixedPoint#(I_SIZE, P_SIZE) factor = 2.0;
+    PitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE) pitchAdjust <- mkPitchAdjust(valueOf(S), factor);
+    return pitchAdjust;
+endmodule
+
+(* synthesize *)
+module mkAudioPipelineFIRFilter(AudioProcessor);
+    AudioProcessor fir <- mkFIRFilter(c);
+    return fir;
+endmodule
+
 module mkAudioPipeline(AudioProcessor);
 
-    AudioProcessor fir <- mkFIRFilter(c);
+    AudioProcessor fir <- mkAudioPipelineFIRFilter();
 
     Chunker#(S, Sample) chunker <- mkChunker();
 
     OverSampler#(S, N, Sample) overSampler <- mkOverSampler(replicate(0));
 
-    FFT#(N, FixedPoint#(I_SIZE, P_SIZE)) fft <- mkFFT();
+    FFT#(N, FixedPoint#(I_SIZE, P_SIZE)) fft <- mkAudioPipelineFFT();
 
-    ToMP#(N, I_SIZE, F_SIZE, P_SIZE) toMp <- mkToMP();
+    ToMP#(N, I_SIZE, F_SIZE, P_SIZE) toMp <- mkAudioPipelineToMP();
 
-    FixedPoint#(I_SIZE, P_SIZE) factor = 2.0;
-    PitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE) pitchAdjust <- mkPitchAdjust(valueOf(S), factor);
+    PitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE) pitchAdjust <- mkAudioPipelinePitchAdjust();
 
-    FromMP#(N, I_SIZE, F_SIZE, P_SIZE) fromMp <- mkFromMP();
+    FromMP#(N, I_SIZE, F_SIZE, P_SIZE) fromMp <- mkAudioPipelineFromMP();
 
-    FFT#(N, FixedPoint#(I_SIZE, P_SIZE)) ifft <- mkIFFT();
+    FFT#(N, FixedPoint#(I_SIZE, P_SIZE)) ifft <- mkAudioPipelineIFFT();
 
     Overlayer#(N, S, Sample) overLayer <- mkOverlayer(replicate(0));
 
