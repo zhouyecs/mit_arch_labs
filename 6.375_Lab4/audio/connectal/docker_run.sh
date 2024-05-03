@@ -23,7 +23,7 @@ docker cp ../../../6.375_Lab4 $CID:/
 # docker exec -u 0 --workdir /6.375_Lab4/audio/connectal $CID make run_fpgaSW
 # docker exec -u 0 --workdir /6.375_Lab4/audio/connectal $CID make run_fpga
 
-# Problem 5
+# Problem 7
 # docker exec -u 0 --workdir /6.375_Lab4/audio/connectal $CID make -j8 simulation
 # docker exec -u 0 --workdir /6.375_Lab4/audio/connectal $CID bluesim/bin/ubuntu.exe 2.0
 # docker exec -u 0 --workdir /6.375_Lab4/audio/connectal $CID cmp out.pcm ../data/mitrib_pa8_2_2.pcm
