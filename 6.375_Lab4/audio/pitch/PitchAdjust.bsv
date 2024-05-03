@@ -14,12 +14,21 @@ typedef Server#(
     Vector#(nbins, ComplexMP#(isize, fsize, psize))
 ) PitchAdjust#(numeric type nbins, numeric type isize, numeric type fsize, numeric type psize);
 
+// Problem 4
+interface SettablePitchAdjust#(
+        numeric type nbins, numeric type isize,
+        numeric type fsize, numeric type psize
+    );
+    interface PitchAdjust#(nbins, isize, fsize, psize) pitchAdjust;
+    interface Put#(FixedPoint#(isize, fsize)) setFactor;
+endinterface
 
 // s - the amount each window is shifted from the previous window.
 //
 // factor - the amount to adjust the pitch.
 //  1.0 makes no change. 2.0 goes up an octave, 0.5 goes down an octave, etc...
-module mkPitchAdjust(Integer s, FixedPoint#(isize, fsize) factor, PitchAdjust#(nbins, isize, fsize, psize) ifc) provisos (Add#(psize, a__, isize), Add#(psize, b__, TAdd#(isize, isize)));
+// Problem 4
+module mkPitchAdjust(Integer s, SettablePitchAdjust#(nbins, isize, fsize, psize) ifc) provisos (Add#(psize, a__, isize), Add#(psize, b__, TAdd#(isize, isize)));
     // Problem 1
     FIFO#(Vector#(nbins, ComplexMP#(isize, fsize, psize))) in  <- mkFIFO(); 
     FIFO#(Vector#(nbins, ComplexMP#(isize, fsize, psize))) out <- mkFIFO(); 
@@ -27,7 +36,11 @@ module mkPitchAdjust(Integer s, FixedPoint#(isize, fsize) factor, PitchAdjust#(n
     Vector#(nbins, Reg#(Phase#(psize))) inphases  <- replicateM(mkReg(0));
     Vector#(nbins, Reg#(Phase#(psize))) outphases <- replicateM(mkReg(0));
 
-    rule adjust;
+    Reg#(FixedPoint#(isize, fsize)) factor <- mkRegU();
+    // Reg#(FixedPoint#(isize, fsize)) factor <- mkReg(factor_init);
+    Reg#(Bool) set_factor <- mkReg(False);
+
+    rule adjust (set_factor == True);
         Vector#(nbins, ComplexMP#(isize, fsize, psize)) in_data = in.first();
         in.deq();
         FixedPoint#(isize, fsize) mag_0 = fromInteger(0);
@@ -55,6 +68,19 @@ module mkPitchAdjust(Integer s, FixedPoint#(isize, fsize) factor, PitchAdjust#(n
         out.enq(out_data);
     endrule
 
-    interface Put request  = toPut(in);
-    interface Get response = toGet(out);
+    // interface Put request  = toPut(in);
+    // interface Get response = toGet(out);
+    // Problem 4
+    interface PitchAdjust pitchAdjust;
+        interface Put request = toPut(in);
+        interface Get response = toGet(out);
+    endinterface
+
+    interface Put setFactor;
+        method Action put(FixedPoint#(isize, fsize) x) if(set_factor == False);
+            factor <= x;
+            set_factor <= True;
+        endmethod
+    endinterface
+
 endmodule

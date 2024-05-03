@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <sys/stat.h>
 #include <pthread.h>
+#include <cmath>
 
 #include "MyDutRequest.h"
 #include "MyDutIndication.h"
@@ -21,9 +22,12 @@ class MyDutIndication : public MyDutIndicationWrapper
 {
 public:
     // You have to define all the functions (indication methods) defined in MyDutIndication
-    virtual void returnOutput(uint16_t d) {
-        if (gotcount < putcount) {
-            if(fwrite(&d, 2, 1, outpcm) != 1) {
+    virtual void returnOutput(uint16_t d)
+    {
+        if (gotcount < putcount)
+        {
+            if (fwrite(&d, 2, 1, outpcm) != 1)
+            {
                 fprintf(stderr, "write failed (out.pcm)\n");
                 fclose(outpcm);
                 pthread_mutex_lock(&outpcmLock);
@@ -31,7 +35,9 @@ public:
                 pthread_mutex_unlock(&outpcmLock);
             }
             gotcount++;
-        } else if (outpcm) {
+        }
+        else if (outpcm)
+        {
             fclose(outpcm);
             pthread_mutex_lock(&outpcmLock);
             outpcm = NULL;
@@ -43,24 +49,28 @@ public:
     MyDutIndication(unsigned int id) : MyDutIndicationWrapper(id) {}
 };
 
-void run_test_bench(){
+void run_test_bench()
+{
     FILE *inpcm = fopen("in.pcm", "rb");
-    if (inpcm == NULL) {
+    if (inpcm == NULL)
+    {
         fprintf(stderr, "could not open in.pcm\n");
         return;
     }
 
     struct stat stat_buf;
     fstat(fileno(inpcm), &stat_buf);
-    if (stat_buf.st_size % 2 != 0) {
+    if (stat_buf.st_size % 2 != 0)
+    {
         fprintf(stderr, "The size of in.pcm should be multiple of 2B\n");
         fclose(inpcm);
         return;
     }
-    putcount = (size_t)stat_buf.st_size/2;
+    putcount = (size_t)stat_buf.st_size / 2;
 
     outpcm = fopen("out.pcm", "wb");
-    if (outpcm == NULL) {
+    if (outpcm == NULL)
+    {
         fprintf(stderr, "could not open out.pcm\n");
         fclose(inpcm);
         return;
@@ -71,8 +81,10 @@ void run_test_bench(){
     printf("start sending in.pcm..\n");
 
     uint16_t elem;
-    for (size_t i = 0; i < putcount; i++) {
-        if(fread(&elem, 2, 1, inpcm) != 1) { // read 2B from in.cpm
+    for (size_t i = 0; i < putcount; i++)
+    {
+        if (fread(&elem, 2, 1, inpcm) != 1)
+        { // read 2B from in.cpm
             fprintf(stderr, "read failed (in.pcm)\n");
             fclose(inpcm);
             fclose(outpcm);
@@ -86,16 +98,18 @@ void run_test_bench(){
 
     // Just in case put seven more 0s for padding -- soft reset required for subsequent usage
     //  8-POINT FFT
-    for (int j = 0; j < 7; j++) {
+    for (int j = 0; j < 7; j++)
+    {
         device->putSampleInput(0);
     }
 
     // Wait until we collect all the output data
     struct timespec one_ms = {0, 1000000};
     pthread_mutex_lock(&outpcmLock);
-    while (outpcm) {
+    while (outpcm)
+    {
         pthread_mutex_unlock(&outpcmLock);
-        nanosleep(&one_ms , NULL);
+        nanosleep(&one_ms, NULL);
         pthread_mutex_lock(&outpcmLock);
     }
     pthread_mutex_unlock(&outpcmLock);
@@ -105,16 +119,29 @@ void run_test_bench(){
     printf("run_test_bench finished!\n");
 }
 
-int main (int argc, const char **argv)
+int main(int argc, const char **argv)
 {
+    if (argc < 2)
+    {
+        printf("Usage: %s factor\n", argv[0]);
+        return -1;
+    }
+
     // Service Indication messages from HW - Register the call-back functions to a indication thread
-    MyDutIndication myIndication (IfcNames_MyDutIndicationH2S);
+    MyDutIndication myIndication(IfcNames_MyDutIndicationH2S);
 
     // Open a channel to FPGA to issue requests
     device = new MyDutRequestProxy(IfcNames_MyDutRequestS2H);
 
     // Invoke reset_dut method of HW request ifc (Soft-reset)
     device->reset_dut();
+
+    double pf = atof(argv[1]);
+
+    uint16_t m_i = (uint16_t)floor(pf);
+    uint16_t m_f = (uint16_t)((1 << 16) * (pf - m_i));
+    uint32_t factorPkt = (uint32_t)(m_i << 16) | m_f;
+    device->setFactor(factorPkt);
 
     // Run the testbench: send in.cpm
     run_test_bench();

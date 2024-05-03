@@ -47,10 +47,10 @@ module mkAudioPipelineFromMP(FromMP#(N, I_SIZE, F_SIZE, P_SIZE));
 endmodule
 
 (* synthesize *)
-module mkAudioPipelinePitchAdjust(PitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE));
-    FixedPoint#(I_SIZE, P_SIZE) factor = 2.0;
-    PitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE) pitchAdjust <- mkPitchAdjust(valueOf(S), factor);
-    return pitchAdjust;
+module mkAudioPipelinePitchAdjust(SettablePitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE));
+    // FixedPoint#(I_SIZE, P_SIZE) factor = 2.0;
+    SettablePitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE) settablePitchAdjust <- mkPitchAdjust(valueOf(S));
+    return settablePitchAdjust;
 endmodule
 
 (* synthesize *)
@@ -59,7 +59,7 @@ module mkAudioPipelineFIRFilter(AudioProcessor);
     return fir;
 endmodule
 
-module mkAudioPipeline(AudioProcessor);
+module mkAudioPipeline(SettableAudioProcessor#(I_SIZE, F_SIZE));
 
     AudioProcessor fir <- mkAudioPipelineFIRFilter();
 
@@ -71,7 +71,9 @@ module mkAudioPipeline(AudioProcessor);
 
     ToMP#(N, I_SIZE, F_SIZE, P_SIZE) toMp <- mkAudioPipelineToMP();
 
-    PitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE) pitchAdjust <- mkAudioPipelinePitchAdjust();
+    // Problem 4
+    SettablePitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE) settablePitchAdjust <- mkAudioPipelinePitchAdjust();
+    PitchAdjust#(N, I_SIZE, F_SIZE, P_SIZE) pitchAdjust = settablePitchAdjust.pitchAdjust;
 
     FromMP#(N, I_SIZE, F_SIZE, P_SIZE) fromMp <- mkAudioPipelineFromMP();
 
@@ -133,14 +135,22 @@ module mkAudioPipeline(AudioProcessor);
         splitter.request.put(x);
     endrule
     
-    method Action putSampleInput(Sample x);
-        fir.putSampleInput(x);
-    endmethod
+    interface AudioProcessor audioProcessor;
+        method Action putSampleInput(Sample x);
+            fir.putSampleInput(x);
+        endmethod
 
-    method ActionValue#(Sample) getSampleOutput();
-        let x <- splitter.response.get();
-        return x;
-    endmethod
+        method ActionValue#(Sample) getSampleOutput();
+            let x <- splitter.response.get();
+            return x;
+        endmethod
+    endinterface
 
+    interface Put setFactor;
+        method Action put(FixedPoint#(I_SIZE, F_SIZE) x);
+            settablePitchAdjust.setFactor.put(x);
+        endmethod
+    endinterface
+    
 endmodule
 
