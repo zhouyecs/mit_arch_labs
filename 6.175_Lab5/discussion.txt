@@ -1,0 +1,17 @@
+1. What is the IPC for the two-stage pipelined processor for each benchmark tested by the run_bmarks.sh script?
+
+
+
+2. What is the formula to compute the next address predictor accuracy from the IPC? (Hint, how many cycles does it take to execute an instruction when the PC+4 prediction is correct? What about when it is incorrect?) Using this formula, what is the accuracy of the PC+4 next address predictor for each benchmark?
+
+
+
+3. What is the IPC for the two-stage pipelined processor with a BTB for each benchmark tested by the run_bmarks.sh script? How much has it improved over the previous version?
+
+
+
+4. How does adding the BTB change the performance of the bpred_* microbenchmarks? (Hint: the number of cycles for bpred_j should go down.)
+
+
+
+5. How long did it take you to complete this lab?
