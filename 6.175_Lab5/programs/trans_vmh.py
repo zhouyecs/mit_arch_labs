@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+
 import sys
 
 if len(sys.argv) != 3:
 	print('Usage: ./trans_vmh [input vmh] [output vmh]')
-	raise Exception()
+	raise
 
 in_file = sys.argv[1]
 out_file = sys.argv[2]

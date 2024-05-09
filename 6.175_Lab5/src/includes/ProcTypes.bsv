@@ -18,6 +18,7 @@ import Types::*;
 import FShow::*;
 import CMemTypes::*;
 
+
 // cpu to host data type
 typedef enum {
 	ExitCode = 2'd0,
@@ -35,6 +36,12 @@ interface Proc;
     method ActionValue#(CpuToHostData) cpuToHost;
     method Action hostToCpu(Addr startpc);
     interface MemInitIfc iMemInit;
+    interface MemInitIfc dMemInit;
+endinterface
+
+interface Proc2;
+    method ActionValue#(CpuToHostData) cpuToHost;
+    method Action hostToCpu(Addr startpc);
     interface MemInitIfc dMemInit;
 endinterface
 
@@ -129,6 +136,13 @@ typedef struct {
 	Maybe#(CsrIndx)  csr;
     Maybe#(Data)     imm;
 } DecodedInst deriving(Bits, Eq, FShow);
+
+typedef struct {
+    DecodedInst      dInst;
+    Addr             pc;
+    Addr             ppc;
+    Bool             epoch;
+} DecodedInst2 deriving(Bits, Eq, FShow);
 
 typedef struct {
     IType            iType;

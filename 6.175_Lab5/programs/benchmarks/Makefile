@@ -44,7 +44,7 @@ RISCV_PREFIX = $(RISCV_TOOL_DIR)/riscv32-unknown-elf
 # gcc
 RISCV_GCC = $(RISCV_PREFIX)-gcc
 # RISCV_GCC_OPTS = -static -Wa,-march=RVI -std=gnu99 -O2 -ffast-math -fno-common -fno-builtin-printf
-RISCV_GCC_OPTS = -static -mabi=ilp32 -std=gnu99 -O2 -ffast-math -fno-common -fno-builtin-printf -Wa,-march=rv32i_zicsr
+RISCV_GCC_OPTS = -static -mabi=ilp32 -std=gnu99 -O2 -ffast-math -fno-common -fno-builtin-printf -W -march=rv32i_zicsr -mabi=ilp32
 
 # link
 RISCV_LINK = $(RISCV_GCC) -T$(bmarkdir)/common/test.ld $(incs) -I$(bmarks_build_obj_dir)/
@@ -52,8 +52,8 @@ RISCV_LINK_OPTS = -nostdlib -nostartfiles -ffast-math -lc -lgcc
 # objdump
 RISCV_OBJDUMP = $(RISCV_PREFIX)-objdump --disassemble --disassemble-zeroes --section=.text --section=.text.startup --section=.data
 # convert to VMH: 64KB memory
-ELF2HEX_TOOL_DIR = /usr/bin
-RISCV_ELF2HEX = $(ELF2HEX_TOOL_DIR)/elf2hex
+# ELF2HEX_TOOL_DIR = /usr/bin
+RISCV_ELF2HEX = $(RISCV_TOOL_DIR)/elf2hex
 VMH_WIDTH = 8
 VMH_DEPTH = 65536
 
@@ -128,5 +128,4 @@ clean:
 	rm -rf $(bmarks_build_dir)
 
 .PHONY: all clean riscv host
-
 
