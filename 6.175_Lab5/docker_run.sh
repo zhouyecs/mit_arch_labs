@@ -12,26 +12,33 @@ CID=`docker ps -a | grep connectal | awk '{print $1}'`
 # https://github.com/stnolting/riscv-gcc-prebuilt
 # https://github.com/sifive/elf2hex(unnecessary)
 
-# git clone https://github.com/cambridgehackers/connectal
-# curl http://www.dabeaz.com/ply/ply-3.9.tar.gz | tar -zvxf -
-
+# init
 # docker exec -u 0 --workdir / $CID rm -rf 6.175_Lab5
 # docker cp ../6.175_Lab5 $CID:/
-
-# init
-# docker exec -u 0 --workdir /6.175_Lab5 $CID ln -s ply-3.9/ply/ connectal/scripts/
-# docker exec -u 0 --workdir /6.175_Lab5 $CID sed -i 's/python script/python3 script/g' connectal/Makefile
-
-
-# Exercise 0
 # docker exec -u 0 --workdir /6.175_Lab5/programs/assembly $CID make
 # docker exec -u 0 --workdir /6.175_Lab5/programs/benchmarks $CID make
+
+# Exercise 0
 # docker exec -u 0 --workdir /6.175_Lab5 $CID make build.bluesim VPROC=ONECYCLE
 # docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_asm.sh
 # docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_bmarks.sh
 
+# Exercise 1
+# docker exec -u 0 --workdir /6.175_Lab5 $CID make build.bluesim VPROC=TWOCYCLE
+# docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_asm.sh
+# docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_bmarks.sh
 
+# Exercise 2
+# docker exec -u 0 --workdir /6.175_Lab5 $CID make build.bluesim VPROC=FOURCYCLE
+# docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_asm.sh
+# docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_bmarks.sh
 
+# Exercise 3
+# docker exec -u 0 --workdir /6.175_Lab5 $CID make build.bluesim VPROC=TWOSTAGE
+# docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_asm.sh
+# docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_bmarks.sh
 
-
-# docker cp $CID:/6.175_Lab5./bluesim/
+# Exercise 4
+# docker exec -u 0 --workdir /6.175_Lab5 $CID make build.bluesim VPROC=TWOSTAGEBTB
+# docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_asm.sh
+# docker exec -u 0 --workdir /6.175_Lab5 $CID ./run_bmarks.sh

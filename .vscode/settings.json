@@ -2,6 +2,7 @@
     "files.associations": {
         "complex": "c",
         "numeric": "c",
-        "cmath": "c"
+        "cmath": "c",
+        "util.h": "c"
     }
 }

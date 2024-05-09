@@ -47,6 +47,10 @@ module mkProc(Proc);
 
 	rule do_decode ((stage == Decode) && csrf.started && memReady);
 		Data inst <- mem.resp();
+		
+		$display("pc: %h inst: (%h) expanded: ", pc, inst, showInst(inst));
+		$fflush(stdout);
+		
 		dInst <= decode(inst);
 		stage <= Execute;
 	endrule

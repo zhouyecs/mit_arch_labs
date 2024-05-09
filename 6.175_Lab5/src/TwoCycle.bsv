@@ -39,6 +39,10 @@ module mkProc(Proc);
 
 	rule do_fetch ((stage == Fetch) && csrf.started && memReady);
 		Data inst <- mem.req(MemReq{op: Ld, addr: pc, data: ?});
+
+		$display("pc: %h inst: (%h) expanded: ", pc, inst, showInst(inst));
+		$fflush(stdout);
+
 		dInst <= decode(inst);
 		stage <= Execute;
 	endrule

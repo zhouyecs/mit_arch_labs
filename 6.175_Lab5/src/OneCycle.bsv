@@ -59,7 +59,7 @@ module mkProc(Proc);
 
         // trace - print the instruction
         $display("pc: %h inst: (%h) expanded: ", pc, inst, showInst(inst));
-	$fflush(stdout);
+	    $fflush(stdout);
 
         // check unsupported instruction at commit time. Exiting
         if(eInst.iType == Unsupported) begin

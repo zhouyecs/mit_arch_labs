@@ -1,17 +1,97 @@
 1. What is the IPC for the two-stage pipelined processor for each benchmark tested by the run_bmarks.sh script?
 
+Benchmark vvadd
+Cycles = 3005
+Insts  = 2408
+IPC    = 0.80
 
+Benchmark tower
+Cycles = 4513
+Insts  = 4168
+IPC    = 0.92
+
+Benchmark qsort
+Cycles = 168377
+Insts  = 123496
+IPC    = 0.73
+
+Benchmark multiply
+Cycles = 27007
+Insts  = 20893
+IPC    = 0.77
+
+Benchmark median
+Cycles = 5930
+Insts  = 4243
+IPC    = 0.71
 
 2. What is the formula to compute the next address predictor accuracy from the IPC? (Hint, how many cycles does it take to execute an instruction when the PC+4 prediction is correct? What about when it is incorrect?) Using this formula, what is the accuracy of the PC+4 next address predictor for each benchmark?
 
+accuracy = 2 - 1 / ipc
 
+Benchmark vvadd
+IPC      = 0.80
+accuracy = 0.75
+
+Benchmark tower
+IPC      = 0.92
+accuracy = 0.91
+
+Benchmark qsort
+IPC      = 0.73
+accuracy = 0.63
+
+Benchmark multiply
+IPC      = 0.77
+accuracy = 0.70
+
+Benchmark median
+IPC      = 0.71
+accuracy = 0.59
 
 3. What is the IPC for the two-stage pipelined processor with a BTB for each benchmark tested by the run_bmarks.sh script? How much has it improved over the previous version?
 
+Benchmark vvadd
+Cycles = 2411
+Insts  = 2408
+IPC    = 0.999
 
+Benchmark tower
+Cycles = 4359
+Insts  = 4168
+IPC    = 0.956
+
+Benchmark qsort
+Cycles = 155349
+Insts  = 123496
+IPC    = 0.795
+
+Benchmark multiply
+Cycles = 22070
+Insts  = 20893
+IPC    = 0.947
+
+Benchmark median
+Cycles = 4359
+Insts  = 4168
+IPC    = 0.956
+
+excep qsort, others improved much
 
 4. How does adding the BTB change the performance of the bpred_* microbenchmarks? (Hint: the number of cycles for bpred_j should go down.)
 
+bpred_j
+Cycles = 3506
+Insts  = 1806
 
+bpred_bht
+Cycles = 1210
+Insts  = 1010
+
+bpred_ras
+Cycles = 413
+Insts  = 286
 
 5. How long did it take you to complete this lab?
+
+14 h
