@@ -1,19 +1,22 @@
 import ProcTypes::*;
 
-`ifdef ONECYCLE
-import OneCycle::*;
-`endif
-`ifdef TWOCYCLE
-import TwoCycle::*;
-`endif
 `ifdef TWOSTAGE
 import TwoStage::*;
 `endif
 `ifdef TWOSTAGEBTB
 import TwoStageBTB::*;
 `endif
-`ifdef FOURCYCLE
-import FourCycle::*;
+`ifdef SIXSTAGE
+import SixStage::*;
+`endif
+`ifdef SIXSTAGEBHT 
+import SixStageBHT::*;
+`endif
+`ifdef SIXSTAGEBONUS
+import SixStageBonus::*;
+`endif
+`ifdef SIXSTAGERAS
+import SixStageRAS::*;
 `endif
 
 import Ifc::*;
