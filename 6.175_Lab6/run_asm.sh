@@ -41,10 +41,11 @@ for test_name in ${asm_tests[@]}; do
 		echo "ERROR: $mem_file does not exit, you need to first compile"
 		exit
 	fi
-	cp ${mem_file} bluesim/mem.vmh 
+	cp ${mem_file} ./mem.vmh 
 
 	# run test
-	make run.bluesim > ${log_dir}/${test_name}.log & # run bsim, redirect outputs to log
+	bluesim/bin/ubuntu.exe 1> ${log_dir}/${test_name}.log & # run bsim, redirect outputs to log
+	# make run.bluesim > ${log_dir}/${test_name}.log & # run bsim, redirect outputs to log
 	sleep ${wait_time}
 	echo ""
 done

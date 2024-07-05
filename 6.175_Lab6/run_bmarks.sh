@@ -15,6 +15,9 @@ wait_time=3
 # create bsim log dir
 mkdir -p ${log_dir}
 
+# kill previous bsim if any
+pkill bluetcl
+
 # run each test
 for test_name in ${asm_tests[@]}; do
 	echo "-- benchmark test: ${test_name} --"

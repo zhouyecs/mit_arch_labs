@@ -7,26 +7,49 @@ What is happening in the processor to cause that to happen?
 Why do not you get this error with PC+4 and BTB predictors?
 How would you fix it?
 You do not actually have to fix this bug, just answer the questions. (Hint: look at the addr field of ExecInst structure.)
+---------------------------------
+error:
+Cycle          7 ----------------------------------------------------
+Fetch: PC = 0000020c, inst = 0030a023, expanded = sw [r 1 0x0] = r 3
+Execute finds misprediction: PC = 0000020c
+Fetch: Mispredict, redirected by Execute
 
+Cycle          8 ----------------------------------------------------
+Fetch: PC = 00004000, inst = 00000000, expanded = unsupport 0x0
+Execute: Kill instruction
 
+Cycle          9 ----------------------------------------------------
+Fetch: PC = 00004000, inst = 00000000, expanded = unsupport 0x0
 
+store指令的addr部分被设置为了next PC。计算store的地址后，发现分支预测错误，但是原地址已经因为数据冒险被store的地址替换了
+(This processor differs from the processor you built in the previous lab because it reads register values in the first stage and there is data hazard.)
+
+PC+4即下一条指令地址，“sw x3, 0(x1)”不是分支指令，当然正确
+BTB只支持分支指令的预测，非分支指令默认PC+4 “so it ALWAYS predicts pc+4 for NON-BRANCH instructions”
+
+分支预测前，保存好当前指令的地址
+---------------------------------
 Discussion Question 2 (5 Points): What evidence do you have that all pipeline stages can fire in the same cycle?
+---------------------------------
 
 
-
+---------------------------------
 Discussion Question 3 (5 Points): In your six-stage pipelined processor, how many cycles does it take to correct a mispredicted instruction?
+---------------------------------
 
 
-
+---------------------------------
 Discussion Question 4 (5 Points): If an instruction depends on the result of the instruction immediately before it in the pipeline, how many cycles is that instruction stalled?
+---------------------------------
 
 
-
+---------------------------------
 Discussion Question 5 (5 Points): What IPC do you get for each benchmark?
+---------------------------------
 
 
 
-
+---------------------------------
 Discussion Question 6 (10 Points): Planning!
 
 One of the hardest things about this lab is properly training and integrating the BHT into the pipeline. There are many mistakes that can be made while still seeing decent results. By having a good plan based on the fundamentals of direction prediction, you will avoid many of those mistakes.
@@ -47,23 +70,28 @@ Which stage will use the interface method to train the BHT?
 How to send training data?
 For which instructions will you train the BHT?
 How will you know if your BHT works?
+---------------------------------
 
 
-
+---------------------------------
 Discussion Question 7 (5 Points): How much improvement do you see in the bpred_bht.riscv.vmh test over the processor in SixStage.bsv?
+---------------------------------
 
 
 
-
+---------------------------------
 Discussion Question 8 (5 Points): How much improvement do you see in the bpred_j.riscv.vmh and bpred_j_noloop.riscv.vmh tests over the processor in SixStage.bsv?
+---------------------------------
 
 
-
+---------------------------------
 Discussion Question 9 (5 Points): What IPC do you get for each benchmark? How much improvement is this over the original six-stage pipeline?
+---------------------------------
 
 
-
+---------------------------------
 Discussion Question 10 (Optional): How long did it take you to complete this lab?
+---------------------------------
 
 
-
+---------------------------------
