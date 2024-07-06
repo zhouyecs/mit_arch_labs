@@ -63,9 +63,9 @@ module mkProc(Proc);
 	rule doFetch(csrf.started);
 		// fetch
 		Data inst = iMem.req(pcReg[0]);
-		// Addr predPc = btb.predPc(pcReg[0]);
+		Addr predPc = btb.predPc(pcReg[0]);
 		// Addr predPc = pcReg[0] + 4; // predict PC +4
-		Addr predPc = pcReg[0]; // discussion 1: if we always predict PC to be next PC
+		// Addr predPc = pcReg[0]; // discussion 1: if we always predict PC to be next PC
 		// decode
 		DecodedInst dInst = decode(inst);
 		// reg read

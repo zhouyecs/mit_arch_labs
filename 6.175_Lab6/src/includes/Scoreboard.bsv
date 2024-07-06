@@ -4,6 +4,8 @@ import ProcTypes::*;
 interface Scoreboard#(numeric type size);
     method Action insert(Maybe#(RIndx) r);
     method Action remove;
+    method Maybe#(RIndx) first;
+    method Bool notEmpty;   
     method Bool search1(Maybe#(RIndx) r);
     method Bool search2(Maybe#(RIndx) r);
     method Bool search3(Maybe#(RIndx) r);
@@ -26,6 +28,10 @@ module mkBypassScoreboard(Scoreboard#(size));
 
     method remove = f.deq;
 
+    method Maybe#(RIndx) first if( f.notEmpty );
+        return f.first;
+    endmethod
+    method Bool notEmpty = f.notEmpty;
     method search1 = f.search;
     method search2 = f.search;
     method search3 = f.search;
@@ -41,6 +47,10 @@ module mkPipelineScoreboard(Scoreboard#(size));
 
     method remove = f.deq;
 
+    method Maybe#(RIndx) first if( f.notEmpty );
+        return f.first;
+    endmethod
+    method Bool notEmpty = f.notEmpty;
     method search1 = f.search;
     method search2 = f.search;
     method search3 = f.search;
@@ -56,6 +66,10 @@ module mkCFScoreboard(Scoreboard#(size));
 
     method remove = f.deq;
 
+    method Maybe#(RIndx) first if( f.notEmpty );
+        return f.first;
+    endmethod
+    method Bool notEmpty = f.notEmpty;
     method search1 = f.search;
     method search2 = f.search;
     method search3 = f.search;

@@ -1,5 +1,6 @@
 import ProcTypes::*;
 
+
 `ifdef TWOSTAGE
 import TwoStage::*;
 `endif
@@ -14,6 +15,9 @@ import SixStageBHT::*;
 `endif
 `ifdef SIXSTAGEBONUS
 import SixStageBonus::*;
+`endif
+`ifdef SIXSTAGERAS
+import SixStageRAS::*;
 `endif
 
 import Ifc::*;

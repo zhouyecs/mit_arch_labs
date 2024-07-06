@@ -10,7 +10,7 @@ asm_tests=(
 
 vmh_dir=programs/build/benchmarks/vmh
 log_dir=logs
-wait_time=3
+wait_time=10
 
 # create bsim log dir
 mkdir -p ${log_dir}

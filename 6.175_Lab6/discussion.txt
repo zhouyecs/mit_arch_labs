@@ -32,22 +32,43 @@ BTB只支持分支指令的预测，非分支指令默认PC+4 “so it ALWAYS pr
 Discussion Question 2 (5 Points): What evidence do you have that all pipeline stages can fire in the same cycle?
 ---------------------------------
 
+观察qsort.log的第六至十二个周期，发现每个周期都能取指一条指令，说明可以同时发射
 
 ---------------------------------
 Discussion Question 3 (5 Points): In your six-stage pipelined processor, how many cycles does it take to correct a mispredicted instruction?
 ---------------------------------
 
+在取指阶段根据btb进行转移预测，在执行阶段判断预测是否正确，相差三个周期
 
 ---------------------------------
 Discussion Question 4 (5 Points): If an instruction depends on the result of the instruction immediately before it in the pipeline, how many cycles is that instruction stalled?
 ---------------------------------
 
+0, 2, 6
 
 ---------------------------------
 Discussion Question 5 (5 Points): What IPC do you get for each benchmark?
 ---------------------------------
 
+Benchmark median
+Cycles = 15403
+Insts  = 9325
+IPC    = 0.61
 
+Benchmark multiply
+Cycles = 38538
+Insts  = 25607
+IPC    = 0.66
+
+Benchmark qsort
+Cycles = 419245
+Insts  = 251586
+IPC    = 0.60
+
+Benchmark tower
+Cycles = 6950
+Insts  = 4970
+IPC    = 0.72
 
 ---------------------------------
 Discussion Question 6 (10 Points): Planning!

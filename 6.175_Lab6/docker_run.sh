@@ -23,3 +23,7 @@ CID=`docker ps -a | grep connectal | awk '{print $1}'`
 # docker exec -u 0 --workdir /6.175_Lab6 $CID cat logs/cache.log
 
 # Exercise 1
+# docker exec -u 0 --workdir /6.175_Lab6 $CID make build.bluesim VPROC=SIXSTAGE
+# docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_asm.sh
+# docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_bmarks.sh
+# docker cp $CID:/6.175_Lab6/logs ./logs
