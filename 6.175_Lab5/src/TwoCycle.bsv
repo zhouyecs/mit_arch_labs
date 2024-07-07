@@ -6,6 +6,7 @@ import Types::*;
 import ProcTypes::*;
 import CMemTypes::*;
 import RFile::*;
+import IMemory::*;
 import DMemory::*;
 import Decode::*;
 import Exec::*;
@@ -18,96 +19,60 @@ import GetPut::*;
 typedef enum {
 	Fetch,
 	Execute
-} Stage deriving(Bits, Eq, FShow);
+} State deriving(Bits, Eq, FShow);
 
 (* synthesize *)
 module mkProc(Proc);
     Reg#(Addr) pc <- mkRegU;
     RFile      rf <- mkRFile;
-    DMemory  mem <- mkDMemory;
+	IMemory  iMem <- mkIMemory;
+    DMemory  dMem <- mkDMemory;
     CsrFile  csrf <- mkCsrFile;
 
-    Reg#(Stage) stage <- mkReg(Fetch);
-
-    Bool memReady = mem.init.done();
-    Reg#(DecodedInst) dInst <- mkRegU();
+	Reg#(DecodedInst) f2e <- mkRegU;
+    Reg#(State) state <- mkReg(Fetch);
+	
+	Bool memReady = iMem.init.done() && dMem.init.done();
 
 	rule test (!memReady);
 		let e = tagged InitDone;
-		mem.init.request.put(e);
+        iMem.init.request.put(e);
+        dMem.init.request.put(e);
 	endrule
 
-	rule do_fetch ((stage == Fetch) && csrf.started && memReady);
-		Data inst <- mem.req(MemReq{op: Ld, addr: pc, data: ?});
+	rule doFetch (state == Fetch && csrf.started && memReady);
+		let inst = iMem.req(pc);
+		f2e <= decode(inst);
+		state <= Execute;
 
 		$display("pc: %h inst: (%h) expanded: ", pc, inst, showInst(inst));
 		$fflush(stdout);
-
-		dInst <= decode(inst);
-		stage <= Execute;
 	endrule
 
-	rule do_execute ((stage == Execute) && csrf.started && memReady);
-		Data rVal1 = rf.rd1(fromMaybe(?, dInst.src1));
-		Data rVal2 = rf.rd2(fromMaybe(?, dInst.src2));
-
-		Data csrVal = csrf.rd(fromMaybe(?, dInst.csr));
-
-		ExecInst eInst = exec(dInst, rVal1, rVal2, pc, ?, csrVal);
+	rule doExecute (state == Execute && csrf.started && memReady);
+		let rVal1  = rf.rd1(fromMaybe(?, f2e.src1));
+		let rVal2  = rf.rd2(fromMaybe(?, f2e.src2));
+		let csrVal = csrf.rd(fromMaybe(?, f2e.csr));
+		let eInst  = exec(f2e, rVal1, rVal2, pc, ?, csrVal);
 
 		if(eInst.iType == Ld) begin
-			eInst.data <- mem.req(MemReq{op: Ld, addr: eInst.addr, data: ?});
+			eInst.data <- dMem.req(MemReq{op: Ld, addr: eInst.addr, data: ?});
 		end else if(eInst.iType == St) begin
-			let d <- mem.req(MemReq{op: St, addr: eInst.addr, data: eInst.data});
+			let d <- dMem.req(MemReq{op: St, addr: eInst.addr, data: eInst.data});
 		end
 
-		// commit
-        
-        // check unsupported instruction at commit time. Exiting
         if(eInst.iType == Unsupported) begin
             $fwrite(stderr, "ERROR: Executing unsupported instruction at pc: %x. Exiting\n", pc);
             $finish;
         end
-
-		/* 
-		// These codes are checking invalid CSR index
-		// you could uncomment it for debugging
-		// 
-		// check invalid CSR read
-		if(eInst.iType == Csrr) begin
-			let csrIdx = fromMaybe(0, eInst.csr);
-			case(csrIdx)
-				csrCycle, csrInstret, csrMhartid: begin
-					$display("CSRR reads 0x%0x", eInst.data);
-				end
-				default: begin
-					$fwrite(stderr, "ERROR: read invalid CSR 0x%0x. Exiting\n", csrIdx);
-					$finish;
-				end
-			endcase
-		end
-		// check invalid CSR write
-		if(eInst.iType == Csrw) begin
-			let csrIdx = fromMaybe(0, eInst.csr);
-			if(csrIdx != csrMtohost) begin
-				$fwrite(stderr, "ERROR: invalid CSR index = 0x%0x. Exiting\n", csrIdx);
-				$finish;
-			end
-			else begin
-				$display("CSRW writes 0x%0x", eInst.data);
-			end
-		end
-		*/
 
 		if(isValid(eInst.dst)) begin
 			rf.wr(fromMaybe(?, eInst.dst), eInst.data);
 		end
 
 		pc <= eInst.brTaken ? eInst.addr : pc + 4;
-
 		csrf.wr(eInst.iType == Csrw ? eInst.csr : Invalid, eInst.data);
-
-		stage <= Fetch;
+		state <= Fetch;
 	endrule
 
     method ActionValue#(CpuToHostData) cpuToHost;
@@ -117,13 +82,14 @@ module mkProc(Proc);
 
     method Action hostToCpu(Bit#(32) startpc) if ( !csrf.started && memReady );
         csrf.start(0); // only 1 core, id = 0
-	$display("Start at pc 200\n");
-	$fflush(stdout);
+		$display("Start at pc 200\n");
+		$fflush(stdout);
         pc <= startpc;
-        stage <= Fetch;
+        state <= Fetch;
     endmethod
 
-    interface dMemInit = mem.init;
+    interface iMemInit = iMem.init;
+    interface dMemInit = dMem.init;
 endmodule
 
 

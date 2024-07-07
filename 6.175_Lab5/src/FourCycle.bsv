@@ -20,113 +20,78 @@ typedef enum {
 	Decode,
 	Execute,
 	WriteBack
-} Stage deriving(Bits, Eq, FShow);
+} State deriving(Bits, Eq, FShow);
 
 (* synthesize *)
 module mkProc(Proc);
-    Reg#(Addr)		pc <- mkRegU;
-    RFile			rf <- mkRFile;
-    DelayedMemory	mem <- mkDelayedMemory;
+    Reg#(Addr)		pc   <- mkRegU;
+    RFile			rf   <- mkRFile;
+    DelayedMemory 	iMem <- mkDelayedMemory;
+    DelayedMemory 	dMem <- mkDelayedMemory;
     CsrFile			csrf <- mkCsrFile;
+    
+	Reg#(State)		state <- mkReg(Fetch);
+    Reg#(DecodedInst) d2e <- mkRegU;
+	Reg#(ExecInst)    e2w <- mkRegU;
 
-    Reg#(Stage)		stage <- mkReg(Fetch);
-
-    Bool memReady = mem.init.done();
-    Reg#(DecodedInst) dInst <- mkRegU();
-	Reg#(ExecInst) eInst <- mkRegU();
+	Bool memReady = iMem.init.done() && dMem.init.done();
 
 	rule test (!memReady);
 		let e = tagged InitDone;
-		mem.init.request.put(e);
+        iMem.init.request.put(e);
+        dMem.init.request.put(e);
 	endrule
 
-	rule do_fetch ((stage == Fetch) && csrf.started && memReady);
-		mem.req(MemReq{op: Ld, addr: pc, data: ?});
-		stage <= Decode;
+	rule doFetch (state == Fetch && csrf.started && memReady);
+		iMem.req(MemReq{op: Ld, addr: pc, data: ?});
+		state <= Decode;
 	endrule
 
-	rule do_decode ((stage == Decode) && csrf.started && memReady);
-		Data inst <- mem.resp();
-		
+	rule doDecode (state == Decode && csrf.started && memReady);
+		let inst <- iMem.resp();
+		let d2e_tmp = decode(inst);
+		d2e <= d2e_tmp;
+		state <= Execute;
+
 		$display("pc: %h inst: (%h) expanded: ", pc, inst, showInst(inst));
 		$fflush(stdout);
-		
-		dInst <= decode(inst);
-		stage <= Execute;
 	endrule
 
-	rule do_execute ((stage == Execute) && csrf.started && memReady);
-		Data rVal1 = rf.rd1(fromMaybe(?, dInst.src1));
-		Data rVal2 = rf.rd2(fromMaybe(?, dInst.src2));
+	rule doExecute (state == Execute && csrf.started && memReady);
+		let rVal1   = rf.rd1(fromMaybe(?, d2e.src1));
+		let rVal2   = rf.rd2(fromMaybe(?, d2e.src2));
+		let csrVal  = csrf.rd(fromMaybe(?, d2e.csr));
+		let e2w_tmp = exec(d2e, rVal1, rVal2, pc, ?, csrVal);
 
-		Data csrVal = csrf.rd(fromMaybe(?, dInst.csr));
-
-		ExecInst eInst_tmp = exec(dInst, rVal1, rVal2, pc, ?, csrVal);
-
-		if(eInst_tmp.iType == Ld) begin
-			mem.req(MemReq{op: Ld, addr: eInst_tmp.addr, data: ?});
-		end else if(eInst_tmp.iType == St) begin
-			mem.req(MemReq{op: St, addr: eInst_tmp.addr, data: eInst_tmp.data});
+		if(e2w_tmp.iType == Ld) begin
+			dMem.req(MemReq{op: Ld, addr: e2w_tmp.addr, data: ?});
+		end else if(e2w_tmp.iType == St) begin
+			dMem.req(MemReq{op: St, addr: e2w_tmp.addr, data: e2w_tmp.data});
 		end
 
-		// commit
-        
-        // check unsupported instruction at commit time. Exiting
-        if(eInst_tmp.iType == Unsupported) begin
+        if(e2w_tmp.iType == Unsupported) begin
             $fwrite(stderr, "ERROR: Executing unsupported instruction at pc: %x. Exiting\n", pc);
             $finish;
         end
 
-		eInst <= eInst_tmp;
-		stage <= WriteBack;
+		e2w <= e2w_tmp;
+		state <= WriteBack;
 	endrule
-		/* 
-		// These codes are checking invalid CSR index
-		// you could uncomment it for debugging
-		// 
-		// check invalid CSR read
-		if(eInst.iType == Csrr) begin
-			let csrIdx = fromMaybe(0, eInst.csr);
-			case(csrIdx)
-				csrCycle, csrInstret, csrMhartid: begin
-					$display("CSRR reads 0x%0x", eInst.data);
-				end
-				default: begin
-					$fwrite(stderr, "ERROR: read invalid CSR 0x%0x. Exiting\n", csrIdx);
-					$finish;
-				end
-			endcase
-		end
-		// check invalid CSR write
-		if(eInst.iType == Csrw) begin
-			let csrIdx = fromMaybe(0, eInst.csr);
-			if(csrIdx != csrMtohost) begin
-				$fwrite(stderr, "ERROR: invalid CSR index = 0x%0x. Exiting\n", csrIdx);
-				$finish;
-			end
-			else begin
-				$display("CSRW writes 0x%0x", eInst.data);
-			end
-		end
-		*/
 
-	rule do_writeback ((stage == WriteBack) && csrf.started && memReady);
-		
-		ExecInst eInst_tmp = eInst;
+	rule doWriteback (state == WriteBack && csrf.started && memReady);
+		let e2w_tmp = e2w;
 
-		if(eInst_tmp.iType == Ld) begin
-			eInst_tmp.data <- mem.resp();
+		if(e2w_tmp.iType == Ld) begin
+			e2w_tmp.data <- dMem.resp;
 		end
 
-		if(isValid(eInst_tmp.dst)) begin
-			rf.wr(fromMaybe(?, eInst_tmp.dst), eInst_tmp.data);
+		if(isValid(e2w_tmp.dst)) begin
+			rf.wr(fromMaybe(?, e2w_tmp.dst), e2w_tmp.data);
 		end
 
-		pc <= eInst_tmp.brTaken ? eInst_tmp.addr : pc + 4;
-
-		csrf.wr(eInst_tmp.iType == Csrw ? eInst_tmp.csr : Invalid, eInst_tmp.data);
-
-		stage <= Fetch;
+		pc <= e2w_tmp.brTaken ? e2w_tmp.addr : pc + 4;
+		csrf.wr(e2w_tmp.iType == Csrw ? e2w_tmp.csr : Invalid, e2w_tmp.data);
+		state <= Fetch;
 	endrule
 
     method ActionValue#(CpuToHostData) cpuToHost;
@@ -136,14 +101,14 @@ module mkProc(Proc);
 
     method Action hostToCpu(Bit#(32) startpc) if ( !csrf.started && memReady );
         csrf.start(0); // only 1 core, id = 0
-	$display("Start at pc 200\n");
-	$fflush(stdout);
+		$display("Start at pc 200\n");
+		$fflush(stdout);
         pc <= startpc;
-        stage <= Fetch;
+        state <= Fetch;
     endmethod
 
-	interface iMemInit = mem.init;
-    interface dMemInit = mem.init;
+	interface iMemInit = iMem.init;
+    interface dMemInit = dMem.init;
 endmodule
 
 

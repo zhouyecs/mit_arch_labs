@@ -6,6 +6,8 @@ http://csg.csail.mit.edu/6.175/index.html
 ### lab5
 第一个riscv实验最考验的其实是配环境，除了已有的docker容器，还需要自己编译 riscv-isa-sim 和 riscv-gcc-prebuilt，详见 docker_run.sh 吧
 
+需要完成的代码可以参考课件L10-L15，但是有些课件上的结构和题目要求不同，例如TwoCycle，课件中将decode放在了execute部分，而题目要求将其放在fetch部分
+
 ## 6.375
 http://csg.csail.mit.edu/6.375/6_375_2019_www/handouts.html
 
