@@ -40,9 +40,9 @@ module mkProc(Proc);
 
     Bool memReady = iMem.init.done() && dMem.init.done();
     rule test (!memReady);
-    let e = tagged InitDone;
-    iMem.init.request.put(e);
-    dMem.init.request.put(e);
+        let e = tagged InitDone;
+        iMem.init.request.put(e);
+        dMem.init.request.put(e);
     endrule    
 
     rule doFetch(csrf.started && memReady);
