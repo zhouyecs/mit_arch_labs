@@ -44,22 +44,21 @@ typedef struct {
 
 (* synthesize *)
 module mkProc(Proc);
-    Ehr#(2, Addr) pcReg <- mkEhr(?);
-    RFile            rf <- mkRFile;
-	Scoreboard#(6)   sb <- mkCFScoreboard;
+    Ehr#(2, Addr)    pcReg <- mkEhr(?);
+    RFile               rf <- mkRFile;
+	Scoreboard#(6)      sb <- mkCFScoreboard;
 	FPGAMemory        iMem <- mkFPGAMemory;
     FPGAMemory        dMem <- mkFPGAMemory;
-    CsrFile        csrf <- mkCsrFile;
-    Btb#(6)         btb <- mkBtb; // 64-entry BTB
+    CsrFile           csrf <- mkCsrFile;
+    Btb#(6)            btb <- mkBtb; // 64-entry BTB
 
 	Reg#(Bool) exeEpoch <- mkReg(False);
-
 	Ehr#(2, Maybe#(ExeRedirect)) exeRedirect <- mkEhr(Invalid);
 
-	Fifo#(6, IF2D) if2dFifo <- mkCFFifo;
-	Fifo#(6, D2RF) d2rfFifo <- mkCFFifo;
-	Fifo#(6, RF2E) rf2eFifo <- mkCFFifo;
-	Fifo#(6, ExecInst) e2mFifo <- mkCFFifo;
+	Fifo#(6, IF2D)     if2dFifo <- mkCFFifo;
+	Fifo#(6, D2RF)     d2rfFifo <- mkCFFifo;
+	Fifo#(6, RF2E)     rf2eFifo <- mkCFFifo;
+	Fifo#(6, ExecInst)  e2mFifo <- mkCFFifo;
 	Fifo#(6, ExecInst) m2wbFifo <- mkCFFifo;
 
     Bool memReady = iMem.init.done && dMem.init.done;
@@ -69,7 +68,7 @@ module mkProc(Proc);
         dMem.init.request.put(e);
     endrule
 
-	rule doInstructionFetch(csrf.started);
+	rule doInstructionFetch(csrf.started && memReady);
 		iMem.req(MemReq{op: Ld, addr: pcReg[0], data: ?});
 		Addr predPc = btb.predPc(pcReg[0]);
 		if2dFifo.enq(IF2D{pc: pcReg[0], predPc: predPc, epoch: exeEpoch});
@@ -78,7 +77,7 @@ module mkProc(Proc);
 		$display("InstructionFetch: PC = %x", pcReg[0]);
 	endrule
 
-	rule doDecode(csrf.started);
+	rule doDecode(csrf.started && memReady);
 		IF2D if2d = if2dFifo.first;
 		Data inst <- iMem.resp;
 		DecodedInst dInst = decode(inst);
@@ -88,7 +87,7 @@ module mkProc(Proc);
 		$display("Decode: PC = %x, inst = %x, expanded = ", if2d.pc, inst, showInst(inst));
 	endrule
 
-	rule doRegisterFetch(csrf.started);
+	rule doRegisterFetch(csrf.started && memReady);
 		D2RF d2rf = d2rfFifo.first;
 
 		DecodedInst dInst = d2rf.dInst;
@@ -111,7 +110,7 @@ module mkProc(Proc);
 		end
 	endrule
 
-	rule doExecute(csrf.started);
+	rule doExecute(csrf.started && memReady);
 		RF2E rf2e = rf2eFifo.first;
 		rf2eFifo.deq;
 
@@ -142,7 +141,7 @@ module mkProc(Proc);
 		end
 	endrule
 
-	rule doMemory(csrf.started);
+	rule doMemory(csrf.started && memReady);
 		e2mFifo.deq;
 		ExecInst eInst = e2mFifo.first;
 
@@ -155,7 +154,7 @@ module mkProc(Proc);
 		m2wbFifo.enq(eInst);
 	endrule
 
-	rule doWriteBack(csrf.started);
+	rule doWriteBack(csrf.started && memReady);
 		m2wbFifo.deq;
 		ExecInst eInst = m2wbFifo.first;
 		if(eInst.iType == Ld) begin
