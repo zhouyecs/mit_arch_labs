@@ -27,3 +27,18 @@ CID=`docker ps -a | grep connectal | awk '{print $1}'`
 # docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_asm.sh
 # docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_bmarks.sh
 # docker cp $CID:/6.175_Lab6/logs ./logs
+
+# Exercise 2 & 3 & 4
+# docker exec -u 0 --workdir /6.175_Lab6 $CID make build.bluesim VPROC=SIXSTAGEBHT
+# docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_asm.sh
+# docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_bmarks.sh
+
+# Exercise 5
+# docker exec -u 0 --workdir /6.175_Lab6 $CID make build.bluesim VPROC=SIXSTAGEBONUS
+# docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_asm.sh
+# docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_bmarks.sh
+
+# Exercise 6
+# docker exec -u 0 --workdir /6.175_Lab6 $CID make build.bluesim VPROC=SIXSTAGERAS
+# docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_asm.sh
+# docker exec -u 0 --workdir /6.175_Lab6 $CID ./run_bmarks.sh

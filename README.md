@@ -4,9 +4,19 @@
 http://csg.csail.mit.edu/6.175/index.html
 
 ### lab5
-第一个riscv实验最考验的其实是配环境，除了已有的docker容器，还需要自己编译 riscv-isa-sim 和 riscv-gcc-prebuilt，详见 docker_run.sh 吧
+第一个riscv实验最考验的其实是配环境，除了已有的docker容器，还需要自己编译 riscv-isa-sim 和 riscv-gcc-prebuilt。
 
 需要完成的代码可以参考课件L10-L15，但是有些课件上的结构和题目要求不同，例如TwoCycle，课件中将decode放在了execute部分，而题目要求将其放在fetch部分
+
+### lab6
+
+区分：
+
+BTB(Branch Target Buffer)：记录分支指令跳转目标地址，使用PC的一部分用于寻址
+BHT(Branch History Table)：记录历史指令的跳转情况（跳还是不挑），也使用PC的一部分用于寻址
+RAS(Return Address Stack)：仅用于函数调用/返回的情况，需要判断指令是否JAL/JALR，若是，rd=x1入栈，rd=x0&rs1=x1时出栈
+
+SixStageBonus.bsv和SixStageRAS.bsv还有点bug，后面修...
 
 ## 6.375
 http://csg.csail.mit.edu/6.375/6_375_2019_www/handouts.html

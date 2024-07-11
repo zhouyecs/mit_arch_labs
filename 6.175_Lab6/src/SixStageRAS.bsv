@@ -13,7 +13,7 @@ import GetPut::*;
 import Btb::*;
 import Scoreboard::*;
 import Bht::*;
-
+import Ras::*;
 
 typedef struct {
     Addr pc;
@@ -69,6 +69,7 @@ module mkProc(Proc);
     CsrFile           csrf <- mkCsrFile;
     Btb#(6)            btb <- mkBtb; // 64-entry BTB
     Bht#(8)            bht <- mkBht; // 256-entry BHT
+	Ras#(8)            ras <- mkRas; // 8-entry RAS
 
 	Reg#(Bool) exeEpoch <- mkReg(False);
     Reg#(Bool) decEpoch <- mkReg(False);
@@ -107,19 +108,35 @@ module mkProc(Proc);
 
         if(if2d.eEpoch == exeEpoch && if2d.dEpoch == decEpoch && if2d.rEpoch == refEpoch) begin
             DecodedInst dInst = decode(inst);
-            Addr predPc = dInst.iType == J || dInst.iType == Br ? bht.predPc(if2d.pc, if2d.predPc) : if2d.predPc;
-            if(if2d.predPc != predPc) begin
-                $display("killing wrong path in instruction decode stage");
-                decRedirect[0] <= Valid (DecRedirect {
-                    pc: if2d.pc, 
-                    nextPc: predPc,
-                    eEpoch: if2d.eEpoch,
-                    rEpoch: if2d.rEpoch
-                } );
-                d2rfFifo.enq(D2RF{pc: if2d.pc, predPc: predPc, dInst: dInst, eEpoch: if2d.eEpoch});
+            let src1 = fromMaybe(?, dInst.src1);
+            let dst  = fromMaybe(?, dInst.dst);
+            Bool popValid = False;
+            Addr predPc = if2d.predPc;
+            Addr popAddr = 0;
+
+            // RAS push and pop
+            if((dInst.iType == Jr || dInst.iType == J) && dst == 1) begin
+                ras.push(if2d.predPc + 4);
+                $display("function call, RAS push: PC = %x, inst = %x, expanded = ", if2d.pc, inst, showInst(inst));
             end
-            else begin
-                d2rfFifo.enq(D2RF{pc: if2d.pc, predPc: if2d.predPc, dInst: dInst, eEpoch: if2d.eEpoch});
+            else if(dInst.iType == Jr && dst == 0 && src1 == 1) begin
+                let popMaybeAddr <- ras.pop;
+                popValid = isValid(popMaybeAddr);
+                popAddr  = fromMaybe(?, popMaybeAddr);
+                $display("return from function call: PC = %x, inst = %x, expanded = ", if2d.pc, inst, showInst(inst));
+            end
+
+            if(dInst.iType == Br) begin
+                predPc = if2d.pc + fromMaybe(?, dInst.imm);
+                predPc = bht.predPc(if2d.pc, predPc);
+            end
+            else if(dInst.iType == J) begin
+                predPc = if2d.pc + fromMaybe(?, dInst.imm);
+            end
+            else if(dInst.iType == Jr && dst == 0 && src1 == 1) begin
+                if(popValid) begin
+                    predPc = popAddr;
+                end
             end
         end
         else begin
@@ -212,7 +229,7 @@ module mkProc(Proc);
 				$finish;
 			end
 
-            if(eInst.iType == J || eInst.iType == Br) begin
+            if(eInst.iType == J || eInst.iType == Jr || eInst.iType == Br) begin
                 bht.updateBht(rf2e.pc, eInst.brTaken);
             end
 		end

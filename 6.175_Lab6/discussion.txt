@@ -77,20 +77,20 @@ One of the hardest things about this lab is properly training and integrating th
 
 For this discussion question, state your plan for integrating the BHT into the pipeline. The following questions should help guide you:
 
-Where will the BHT be positioned in the pipeline?
-What pipeline stage performs lookups into the BHT?
-In which pipeline stage will the BHT prediction be used?
-Will the BHT prediction need to be passed between pipeline stages?
-How to redirect PC using BHT prediction?
-Do you need to add a new epoch?
-How to handle the redirect messages?
-Do you need to change anything to the current instruction and its data structures if redirecting?
-How will you train the BHT?
-Which stage produces training data for the BHT?
-Which stage will use the interface method to train the BHT?
-How to send training data?
-For which instructions will you train the BHT?
-How will you know if your BHT works?
+Where will the BHT be positioned in the pipeline?   decode
+What pipeline stage performs lookups into the BHT?  decode
+In which pipeline stage will the BHT prediction be used?    decode
+Will the BHT prediction need to be passed between pipeline stages?  no
+How to redirect PC using BHT prediction?    judge whether the branch is taken
+Do you need to add a new epoch?     yes
+How to handle the redirect messages?    ehr
+Do you need to change anything to the current instruction and its data structures if redirecting?   yes
+How will you train the BHT?    in exe stage, using its pc and taken to update BHT
+Which stage produces training data for the BHT?    decode
+Which stage will use the interface method to train the BHT?     exe
+How to send training data?  by using updateBht method
+For which instructions will you train the BHT?  J, JR, BR
+How will you know if your BHT works?    check log 
 ---------------------------------
 
 
@@ -98,21 +98,76 @@ How will you know if your BHT works?
 Discussion Question 7 (5 Points): How much improvement do you see in the bpred_bht.riscv.vmh test over the processor in SixStage.bsv?
 ---------------------------------
 
+SixStage.bsv
+Cycles = 5979
+Insts  = 3413
 
+SixStageBHT.bsv
+Cycles = 2170
+Insts  = 1850
 
 ---------------------------------
 Discussion Question 8 (5 Points): How much improvement do you see in the bpred_j.riscv.vmh and bpred_j_noloop.riscv.vmh tests over the processor in SixStage.bsv?
 ---------------------------------
 
+SixStage.bsv
+bpred_j
+Cycles = 2224
+Insts  = 1917
+bpred_j_noloop
+Cycles = 235
+Insts  = 227
+
+SixStageBHT.bsv
+bpred_j
+Cycles = 2170
+Insts  = 1850
+bpred_j_noloop
+Cycles = 141
+Insts  = 104
 
 ---------------------------------
 Discussion Question 9 (5 Points): What IPC do you get for each benchmark? How much improvement is this over the original six-stage pipeline?
 ---------------------------------
 
+SixStage.bsv
+Benchmark median
+Cycles = 15403
+Insts  = 9325
+Benchmark multiply
+Cycles = 38538
+Insts  = 25607
+Benchmark qsort
+Cycles = 419245
+Insts  = 251586
+Benchmark tower
+Cycles = 6950
+Insts  = 4970
+Benchmark vvadd
+Cycles = 3637
+Insts  = 2426
+
+SixStageBHT.bsv
+Benchmark median
+Cycles = 10989
+Insts  = 6690
+Benchmark multiply
+Cycles = 36025
+Insts  = 24861
+Benchmark qsort
+Cycles = 285648
+Insts  = 172379
+Benchmark tower
+Cycles = 6679
+Insts  = 4731
+Benchmark vvadd
+Cycles = 3633
+Insts  = 2422
 
 ---------------------------------
 Discussion Question 10 (Optional): How long did it take you to complete this lab?
 ---------------------------------
 
+16h
 
 ---------------------------------
