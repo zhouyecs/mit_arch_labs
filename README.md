@@ -10,11 +10,10 @@ http://csg.csail.mit.edu/6.175/index.html
 
 ### lab6
 
-区分：
-
-BTB(Branch Target Buffer)：记录分支指令跳转目标地址，使用PC的一部分用于寻址
-BHT(Branch History Table)：记录历史指令的跳转情况（跳还是不挑），也使用PC的一部分用于寻址
-RAS(Return Address Stack)：仅用于函数调用/返回的情况，需要判断指令是否JAL/JALR，若是，rd=x1入栈，rd=x0&rs1=x1时出栈
+区分：  
+BTB(Branch Target Buffer)：记录分支指令跳转目标地址，使用PC的一部分用于寻址  
+BHT(Branch History Table)：记录历史指令的跳转情况（跳还是不挑），也使用PC的一部分用于寻址  
+RAS(Return Address Stack)：仅用于函数调用/返回的情况，需要判断指令是否JAL/JALR，若是，rd=x1入栈，rd=x0&rs1=x1时出栈  
 
 SixStageBonus.bsv和SixStageRAS.bsv还有点bug，后面修...
 
@@ -24,11 +23,8 @@ http://csg.csail.mit.edu/6.375/6_375_2019_www/handouts.html
 ### lab2
 从这个 lab 开始，难度骤增，开始记录...
 #### problem 1
-按照提示，一上来就报错。（我：？）  
-我对着别人的代码找半天，还是报错。（我：？）  
-最后发现蹊跷， Makefile 的编译选项删除 “-Xc++ D_GLIBCXX_USE_CXX11_ABI=0”或者改成“-Xc++ D_GLIBCXX_USE_CXX11_ABI=1”，pass。  
-查了一下，详见：https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html 和 https://developers.redhat.com/blog/2015/02/05/gcc5-and-the-c11-abi  
-简而言之，就是新旧版的兼容问题。（怎么没有小贴士呢？
+Makefile 的编译选项删除 “-Xc++ D_GLIBCXX_USE_CXX11_ABI=0”或者改成“-Xc++ D_GLIBCXX_USE_CXX11_ABI=1”，pass。  
+新旧版的兼容问题，详见：https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html 和 https://developers.redhat.com/blog/2015/02/05/gcc5-and-the-c11-abi  
 #### problem 2
 写一个 module mkLinearFFT。  
 参考 figure2，mkCombinationalFFT  
