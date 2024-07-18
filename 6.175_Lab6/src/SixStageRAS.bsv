@@ -128,7 +128,7 @@ module mkProc(Proc);
 
             if(dInst.iType == Br) begin
                 predPc = if2d.pc + fromMaybe(?, dInst.imm);
-                predPc = bht.predPc(if2d.pc, predPc);
+                predPc = bht.predPc(if2d.pc, dInst);
             end
             else if(dInst.iType == J) begin
                 predPc = if2d.pc + fromMaybe(?, dInst.imm);

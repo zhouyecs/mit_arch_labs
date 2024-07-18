@@ -107,7 +107,7 @@ module mkProc(Proc);
 
         if(if2d.eEpoch == exeEpoch && if2d.dEpoch == decEpoch && if2d.rEpoch == refEpoch) begin
             DecodedInst dInst = decode(inst);
-            Addr predPc = dInst.iType == J || dInst.iType == Br ? bht.predPc(if2d.pc, if2d.predPc) : if2d.predPc;
+            Addr predPc = dInst.iType == J || dInst.iType == Br ? bht.predPc(if2d.pc, dInst) : if2d.predPc;
             if(if2d.predPc != predPc) begin
                 $display("killing wrong path in instruction decode stage");
                 decRedirect[0] <= Valid (DecRedirect {

@@ -1,8 +1,9 @@
 import Vector::*;
 import Types::*;
+import ProcTypes::*;
 
 interface Bht#(numeric type indexSize);
-    method Addr predPc(Addr pc, Addr targetPc);
+    method Addr predPc(Addr pc, DecodedInst dInst);
     method Action updateBht(Addr pc, Bool taken);
 endinterface
 
@@ -51,8 +52,21 @@ module mkBht(Bht#(indexSize)) provisos(Add#(indexSize, a_, 32));
         bhtArr[index] <= updateBhtEntry(bhtEntry, taken);
     endmethod
 
-    method Addr predPc(Addr pc, Addr targetPc);
-        Bool isTaken = predBrTaken(bhtArr[getBhtIndex(pc)]);
-        return getTargetPc(pc, targetPc, isTaken);
+    method Addr predPc(Addr pc, DecodedInst dInst);
+        // Bool isTaken = predBrTaken(bhtArr[getBhtIndex(pc)]);
+        // return getTargetPc(pc, targetPc, isTaken);
+        if(dInst.iType == Br) begin
+            Addr targetPc = pc + fromMaybe(?, dInst.imm);
+            Bit#(indexSize) index = getBhtIndex(pc);
+            Bool direction = predBrTaken(bhtArr[index]);
+            return getTargetPc(pc, targetPc, direction);
+        end
+        else if(dInst.iType == J) begin
+            Addr targetPc = pc + fromMaybe(?, dInst.imm);
+            return targetPc;
+        end
+        else begin
+            return pc + 4;
+        end
     endmethod
 endmodule
