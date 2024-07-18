@@ -6,7 +6,7 @@ asm_tests=(
 	qsort
 	towers
 	vvadd
-	mandelbrot
+	# mandelbrot
 	)
 
 vmh_dir=programs/build/benchmarks/vmh512

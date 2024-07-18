@@ -35,7 +35,30 @@ Record the results for ./run_bmarks.sh withcache.
 What IPC do you see for each benchmark?
 ---------------------------------
 
+Benchmark median
+Cycles = 10721
+Insts  = 5127
+IPC = 0.48
 
+Benchmark multiply
+Cycles = 43261
+Insts  = 21603
+IPC = 0.50
+
+Benchmark qsort
+Cycles = 298027
+Insts  = 144361
+IPC = 0.48
+
+Benchmark tower
+Cycles = 21624
+Insts  = 4632
+IPC = 0.21
+
+Benchmark vvadd
+Cycles = 5326
+Insts  = 2417
+IPC = 0.45
 
 ---------------------------------
 Discussion Question 3 (10 Points): 
@@ -52,3 +75,4 @@ how long (in wall clock time) it would take to run ./run_mandelbrot.sh in simula
 Discussion Question 4 (Optional): How long did it take for you to finish this lab?
 ---------------------------------
 
+10h

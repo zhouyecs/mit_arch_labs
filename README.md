@@ -15,7 +15,9 @@ BTB(Branch Target Buffer)：记录分支指令跳转目标地址，使用PC的�
 BHT(Branch History Table)：记录历史指令的跳转情况（跳还是不挑），也使用PC的一部分用于寻址  
 RAS(Return Address Stack)：仅用于函数调用/返回的情况，需要判断指令是否JAL/JALR，若是，rd=x1入栈，rd=x0&rs1=x1时出栈  
 
-SixStageBonus.bsv和SixStageRAS.bsv还有点bug，后面修...
+### lab7
+
+
 
 ## 6.375
 http://csg.csail.mit.edu/6.375/6_375_2019_www/handouts.html

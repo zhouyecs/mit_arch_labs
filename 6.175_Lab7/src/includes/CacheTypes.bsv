@@ -47,3 +47,12 @@ interface Cache;
     method ActionValue#(MemResp) resp;
 endinterface
 
+interface ICache;
+    method Action req(Addr a);
+    method ActionValue#(MemResp) resp;
+endinterface
+  
+interface DCache;
+    method Action req(MemReq r);
+    method ActionValue#(MemResp) resp;
+endinterface

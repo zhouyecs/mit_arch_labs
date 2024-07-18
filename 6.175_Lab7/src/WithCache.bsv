@@ -1,8 +1,9 @@
+// modified from SixStageBHT.bsv
+
 import Types::*;
 import ProcTypes::*;
 import CMemTypes::*;
 import RFile::*;
-import FPGAMemory::*;
 import Decode::*;
 import Exec::*;
 import CsrFile::*;
@@ -13,6 +14,10 @@ import GetPut::*;
 import Btb::*;
 import Scoreboard::*;
 import Bht::*;
+import Cache::*;
+import CacheTypes::*;
+import WideMemInit::*;
+import MemUtil::*;
 
 
 typedef struct {
@@ -50,13 +55,11 @@ typedef struct {
 	Addr nextPc;
 } ExeRedirect deriving (Bits, Eq);
 
-(* synthesize *)
-module mkProc(Proc);
+// (* synthesize *)
+module mkProc#(Fifo#(2,DDR3_Req) ddr3ReqFifo, Fifo#(2,DDR3_Resp) ddr3RespFifo)(Proc);
     Ehr#(2, Addr)    pcReg <- mkEhr(?);
     RFile               rf <- mkRFile;
 	Scoreboard#(6)      sb <- mkCFScoreboard;
-	FPGAMemory        iMem <- mkFPGAMemory;
-    FPGAMemory        dMem <- mkFPGAMemory;
     CsrFile           csrf <- mkCsrFile;
     Btb#(6)            btb <- mkBtb; // 64-entry BTB
     Bht#(8)            bht <- mkBht; // 256-entry BHT
@@ -73,15 +76,20 @@ module mkProc(Proc);
 	Fifo#(6, ExecInst)  e2mFifo <- mkCFFifo;
 	Fifo#(6, ExecInst) m2wbFifo <- mkCFFifo;
 
-    Bool memReady = iMem.init.done && dMem.init.done;
+    Bool memReady = True;
 
-    rule test (!memReady);
-        let e = tagged InitDone;
-        iMem.init.request.put(e);
-        dMem.init.request.put(e);
-    endrule
+	WideMem wideMemWrapper <- mkWideMemFromDDR3(ddr3ReqFifo, ddr3RespFifo);
+	Vector#(2, WideMem) wideMems <- mkSplitWideMem(memReady && csrf.started, wideMemWrapper);
 
-	rule doInstructionFetch(csrf.started && memReady);
+	rule drainMemResponses(!csrf.started);
+		$display("drain!");
+		ddr3RespFifo.deq;
+	endrule
+
+	Cache iMem <- mkCache(wideMems[0]);
+	Cache dMem <- mkCache(wideMems[1]);
+
+	rule doInstructionFetch(csrf.started);
 		iMem.req(MemReq{op: Ld, addr: pcReg[0], data: ?});
 		Addr predPc = btb.predPc(pcReg[0]);
 		if2dFifo.enq(IF2D{pc: pcReg[0], predPc: predPc, eEpoch: exeEpoch, dEpoch: decEpoch});
@@ -90,13 +98,13 @@ module mkProc(Proc);
 		$display("InstructionFetch: PC = %x", pcReg[0]);
 	endrule
 
-	rule doDecode(csrf.started && memReady);
+	rule doDecode(csrf.started);
 		IF2D if2d = if2dFifo.first;
 		Data inst <- iMem.resp;
 
-        if(if2d.eEpoch == exeEpoch && if2d.dEpoch == decEpoch) begin
+        if(if2d.dEpoch == decEpoch) begin
             DecodedInst dInst = decode(inst);
-            Addr predPc = dInst.iType == J || dInst.iType == Br ? bht.predPc(if2d.pc, if2d.predPc) : if2d.predPc;
+            Addr predPc = dInst.iType == J || dInst.iType == Br ? bht.predPc(if2d.pc, dInst) : if2d.predPc;
             if(if2d.predPc != predPc) begin
                 $display("killing wrong path in instruction decode stage");
                 decRedirect[0] <= Valid (DecRedirect{
@@ -111,19 +119,14 @@ module mkProc(Proc);
             end
         end
         else begin
-            if(if2d.eEpoch != exeEpoch) begin
-                $display("kill instruction, exeEpoch not match: PC = %x, inst = %x, expanded = ", if2d.pc, inst, showInst(inst));
-            end
-            else begin
-                $display("kill instruction, decEpoch not match: PC = %x, inst = %x, expanded = ", if2d.pc, inst, showInst(inst));
-            end
+            $display("kill instruction, decEpoch not match: PC = %x, inst = %x, expanded = ", if2d.pc, inst, showInst(inst));
         end
 
 		if2dFifo.deq;	
 		$display("Decode: PC = %x, inst = %x, expanded = ", if2d.pc, inst, showInst(inst));
 	endrule
 
-	rule doRegisterFetch(csrf.started && memReady);
+	rule doRegisterFetch(csrf.started);
 		D2RF d2rf = d2rfFifo.first;
 
 		DecodedInst dInst = d2rf.dInst;
@@ -146,7 +149,7 @@ module mkProc(Proc);
 		end
 	endrule
 
-	rule doExecute(csrf.started && memReady);
+	rule doExecute(csrf.started);
 		RF2E rf2e = rf2eFifo.first;
 		rf2eFifo.deq;
 
@@ -175,13 +178,13 @@ module mkProc(Proc);
 				$finish;
 			end
 
-            if(eInst.iType == J || eInst.iType == Br) begin
+            if(rf2e.dInst.iType == J || rf2e.dInst.iType == Br) begin
                 bht.updateBht(rf2e.pc, eInst.brTaken);
             end
 		end
 	endrule
 
-	rule doMemory(csrf.started && memReady);
+	rule doMemory(csrf.started);
 		e2mFifo.deq;
 		ExecInst eInst = e2mFifo.first;
 
@@ -194,7 +197,7 @@ module mkProc(Proc);
 		m2wbFifo.enq(eInst);
 	endrule
 
-	rule doWriteBack(csrf.started && memReady);
+	rule doWriteBack(csrf.started);
 		m2wbFifo.deq;
 		ExecInst eInst = m2wbFifo.first;
 		if(eInst.iType == Ld) begin
@@ -225,9 +228,11 @@ module mkProc(Proc);
 			$display("Fetch: Mispredict, redirected by Execute");
 		end
         else if(decRedirect[1] matches tagged Valid .r) begin
-            pcReg[1] <= r.nextPc;
-            decEpoch <= !decEpoch;
-            $display("Fetch: Redirected by Decode");
+			if(r.eEpoch == exeEpoch) begin
+				pcReg[1] <= r.nextPc;
+				decEpoch <= !decEpoch;
+				$display("Fetch: Redirected by Decode");
+			end
         end
 		// reset EHR
 		exeRedirect[1] <= Invalid;
@@ -239,13 +244,10 @@ module mkProc(Proc);
         return ret;
     endmethod
 
-    method Action hostToCpu(Bit#(32) startpc) if ( !csrf.started && memReady );
+    method Action hostToCpu(Bit#(32) startpc) if (!csrf.started && memReady && !ddr3RespFifo.notEmpty);
 		csrf.start(0); // only 1 core, id = 0
 		// $display("Start at pc 200\n");
 		// $fflush(stdout);
         pcReg[0] <= startpc;
     endmethod
-
-	interface iMemInit = iMem.init;
-    interface dMemInit = dMem.init;
 endmodule

@@ -21,3 +21,8 @@ CID=`docker ps -a | grep connectal | awk '{print $1}'`
 # docker exec -u 0 --workdir /6.175_Lab7 $CID make build.bluesim VPROC=WITHOUTCACHE
 # docker exec -u 0 --workdir /6.175_Lab7 $CID ./run_asm.sh
 # docker exec -u 0 --workdir /6.175_Lab7 $CID ./run_bmarks.sh
+
+# Exercise 2 & Discussion 2
+# docker exec -u 0 --workdir /6.175_Lab7 $CID make build.bluesim VPROC=WITHCACHE
+# docker exec -u 0 --workdir /6.175_Lab7 $CID ./run_asm.sh
+# docker exec -u 0 --workdir /6.175_Lab7 $CID ./run_bmarks.sh
