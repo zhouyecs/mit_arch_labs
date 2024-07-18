@@ -1,0 +1,54 @@
+---------------------------------
+Discussion Question 1 (5 Points): 
+Record the results for ./run_bmarks.sh withoutcache. 
+What IPC do you see for each benchmark?
+---------------------------------
+
+Benchmark median
+Cycles = 48720
+Insts  = 5283
+IPC = 0.11
+
+Benchmark multiply
+Cycles = 182640
+Insts  = 22380
+IPC = 0.12
+
+Benchmark qsort
+Cycles = 1314784
+Insts  = 143960
+IPC = 0.11
+
+Benchmark tower
+Cycles = 36387
+Insts  = 4314
+IPC = 0.12
+
+Benchmark vvadd
+Cycles = 19296
+Insts  = 2414
+IPC = 0/13
+
+---------------------------------
+Discussion Question 2 (5 Points): 
+Record the results for ./run_bmarks.sh withcache. 
+What IPC do you see for each benchmark?
+---------------------------------
+
+
+
+---------------------------------
+Discussion Question 3 (10 Points): 
+How many cycles does the Mandelbrot program take to execute in your processor? 
+The current FPGA design has an effective clock speed of 50 MHz. 
+How long does the Mandelbrot program take to execute in seconds? 
+Estimate how much of a speedup you are seeing in hardware versus simulation by estimating 
+how long (in wall clock time) it would take to run ./run_mandelbrot.sh in simulation.
+---------------------------------
+
+
+
+---------------------------------
+Discussion Question 4 (Optional): How long did it take for you to finish this lab?
+---------------------------------
+

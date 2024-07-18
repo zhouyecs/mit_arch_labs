@@ -13,10 +13,10 @@ with open(in_file, 'r') as fin:
     lines = fin.readlines();
 
 with open(out_file, 'w') as fout:
-    # fout.write(lines[0]);
+    fout.write(lines[0]);
     line_num = 0
     inst_line = ''
-    for i in range(0, len(lines)):
+    for i in range(1, len(lines)):
         val = lines[i][:-1].rstrip('\n');
         inst_line = val + inst_line;
         # fout.write(val[8:]);

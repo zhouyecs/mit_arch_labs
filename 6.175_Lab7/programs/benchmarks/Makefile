@@ -12,7 +12,7 @@ bmarks_build_dir := $(bmarkdir)/../build/benchmarks
 bmarks_build_bin_dir := $(bmarks_build_dir)/bin
 bmarks_build_obj_dir := $(bmarks_build_dir)/obj
 bmarks_build_dump_dir := $(bmarks_build_dir)/dump
-bmarks_build_vmh_dir := $(bmarks_build_dir)/vmh
+bmarks_build_vmh_dir := $(bmarks_build_dir)/vmh512
 
 #--------------------------------------------------------------------
 # Sources
@@ -46,7 +46,7 @@ RISCV_PREFIX = $(RISCV_TOOL_DIR)/riscv32-unknown-elf
 # gcc
 RISCV_GCC = $(RISCV_PREFIX)-gcc
 # RISCV_GCC_OPTS = -static -Wa,-march=RVI -std=gnu99 -O2 -ffast-math -fno-common -fno-builtin-printf
-RISCV_GCC_OPTS = -static -Wa,-march=rv32i_zicsr -mabi=ilp32 -std=gnu99 -O2 -ffast-math -fno-common -fno-builtin-printf
+RISCV_GCC_OPTS = -static -mabi=ilp32 -std=gnu99 -O2 -ffast-math -fno-common -fno-builtin-printf -W -march=rv32i_zicsr -mabi=ilp32
 
 # link
 RISCV_LINK = $(RISCV_GCC) -T$(bmarkdir)/common/test.ld $(incs) -I$(bmarks_build_obj_dir)/
@@ -54,10 +54,10 @@ RISCV_LINK_OPTS = -nostdlib -nostartfiles -ffast-math -lc -lgcc
 # objdump
 RISCV_OBJDUMP = $(RISCV_PREFIX)-objdump --disassemble --disassemble-zeroes --section=.text --section=.text.startup --section=.data
 # convert to VMH: 64KB memory
-# ELF2HEX_TOOL_DIR = /opt/riscv/bin
-# RISCV_ELF2HEX = $(ELF2HEX_TOOL_DIR)/elf2hex
-# VMH_WIDTH = 8
-# VMH_DEPTH = 65536
+ELF2HEX_TOOL_DIR = /opt/riscv/bin
+RISCV_ELF2HEX = $(ELF2HEX_TOOL_DIR)/elf2hex
+VMH_WIDTH = 8
+VMH_DEPTH = 65536
 
 VPATH += $(addprefix $(bmarkdir)/, $(bmarks))
 VPATH += $(bmarkdir)/common
@@ -80,11 +80,11 @@ bmarks_riscv_vmh = $(addsuffix .riscv.vmh, $(bmarks))
 bmarks_defs   = -DPREALLOCATE=0 -DHOST_DEBUG=0
 bmarks_cycles = 80000
 
-# $(bmarks_riscv_vmh): %.riscv.vmh: %.riscv
-# 	@echo $(basename $<)
-# 	@echo "@0" > $(bmarks_build_vmh_dir)/temp
-# 	$(RISCV_ELF2HEX) $(VMH_WIDTH) $(VMH_DEPTH) $(bmarks_build_bin_dir)/$< >> $(bmarks_build_vmh_dir)/temp
-# 	$(bmarkdir)/../trans_vmh.py $(bmarks_build_vmh_dir)/temp $(bmarks_build_vmh_dir)/$@
+$(bmarks_riscv_vmh): %.riscv.vmh: %.riscv
+	@echo $(basename $<)
+	@echo "@0" > $(bmarks_build_vmh_dir)/temp
+	$(RISCV_ELF2HEX) $(VMH_WIDTH) $(VMH_DEPTH) $(bmarks_build_bin_dir)/$< >> $(bmarks_build_vmh_dir)/temp
+	$(bmarkdir)/../trans_vmh512.py $(bmarks_build_vmh_dir)/temp $(bmarks_build_vmh_dir)/$@
 
 $(bmarks_riscv_dump): %.riscv.dump: %.riscv
 	$(RISCV_OBJDUMP) $(bmarks_build_bin_dir)/$< > $(bmarks_build_dump_dir)/$@
@@ -97,7 +97,7 @@ $(bmarks_riscv_dump): %.riscv.dump: %.riscv
 	$(RISCV_GCC) $(RISCV_GCC_OPTS) $(bmarks_defs) -D__ASSEMBLY__=1 \
 	             -c $(incs) $< -o $(bmarks_build_obj_dir)/$@
 
-riscv: $(bmarks_build_bin_dir) $(bmarks_build_obj_dir) $(bmarks_build_dump_dir) $(bmarks_build_vmh_dir) $(bmarks_riscv_dump) # $(bmarks_riscv_vmh)
+riscv: $(bmarks_build_bin_dir) $(bmarks_build_obj_dir) $(bmarks_build_dump_dir) $(bmarks_build_vmh_dir) $(bmarks_riscv_dump) $(bmarks_riscv_vmh)
 
 
 #------------------------------------------------------------
