@@ -1,0 +1,15 @@
+---------------------------------
+Discussion Question 1 (10 Points): 
+what new hazards would exceptions introduce if you were working on a pipelined implementation?
+---------------------------------
+
+A synchronous interrupt is caused by a particular instruction, and behaves like a control
+hazard, i.e., the PC has to be redirected and instructions that follow in the normal flow
+that are already in the pipeline have to be dropped, just like wrong-path instructions after
+a misprediction.
+
+---------------------------------
+Discussion Question 2 (Optional): How long did it take for you to finish this lab?
+---------------------------------
+
+3h
