@@ -29,6 +29,8 @@ module mkTranslator(WideMem wideMem, Cache ifc);
     endmethod
 endmodule
 
+// ================ with cache ================
+
 typedef enum { 
     Ready, 
     StartMiss, 

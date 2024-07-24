@@ -17,7 +17,8 @@ RAS(Return Address Stack)：仅用于函数调用/返回的情况，需要判断
 
 ### lab7
 
-
+对于withoutCache，只有load指令需要resp，所以在req时判断指令类型，若为load，进入fifo等待resp调用  
+对于withCache，参考课件L17-18
 
 ## 6.375
 http://csg.csail.mit.edu/6.375/6_375_2019_www/handouts.html
